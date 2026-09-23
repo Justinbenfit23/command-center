@@ -97,8 +97,13 @@ def _claim_after_dbr(iid, uid, wait=420):
         lv = _live_index().get(it.get("live_sid") or "")
         if lv and lv["status"] == "busy": continue
         msgs = live.transcript(it["live_sid"], limit=30) if it.get("live_sid") else []
-        if msgs: cs.pin_links(it, "\n".join(m["text"] for m in msgs if m["role"] == "assistant"))
-        key = (db.get_item(iid) or {}).get("shipyard_key")
+        text = "\n".join(m["text"] for m in msgs if m["role"] == "assistant")
+        if msgs: cs.pin_links(it, text)
+        # dbr done closes the ticket for the work just finished and spins off a follow-up for what is
+        # left. The spin-off is created last, so the highest key in the transcript is the one to hand over.
+        keys = sorted(set(cs.KEY.findall(text)), key=lambda k: int(k.split("-")[1]))
+        key = keys[-1] if keys else (db.get_item(iid) or {}).get("shipyard_key")
+        if key: db.update_item(iid, shipyard_key=key)
         if key:
             try: shipyard.call("update_task", task_id=key, assignee_id=uid, status="todo")
             except Exception as e: print(f"post-dbr assign failed: {e}", file=sys.stderr, flush=True)
