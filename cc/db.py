@@ -68,9 +68,14 @@ def get_item(iid):
 
 LIFT_ORDER = {"light": 0, "medium": 1, "heavy": 2}
 
+ARCHIVED = ("archived", "done", "dropped")
+
 def list_items(status="open", sort="lift"):
-    """sort: lift (lightest first, newest within a tier) | added_desc | added_asc"""
-    with conn() as c: out = rows(c.execute("SELECT * FROM items WHERE status=?", (status,)))
+    """status: 'open' | 'archived' (covers done/dropped) | 'all'. sort: lift | added_desc | added_asc"""
+    with conn() as c:
+        if status == "all": out = rows(c.execute("SELECT * FROM items"))
+        elif status == "open": out = rows(c.execute("SELECT * FROM items WHERE status NOT IN (?,?,?)", ARCHIVED))
+        else: out = rows(c.execute("SELECT * FROM items WHERE status IN (?,?,?)", ARCHIVED))
     if sort == "added_asc": out.sort(key=lambda t: _ts(t.get("created_at")))
     elif sort == "added_desc": out.sort(key=lambda t: -_ts(t.get("created_at")))
     else: out.sort(key=lambda t: (LIFT_ORDER.get(t.get("lift") or "", 1), -_ts(t.get("created_at"))))

@@ -179,6 +179,7 @@ async function handoff(id,btn,label){
  if(btn)btn.textContent='sending…';
  const res=await post(`/api/items/${id}/team`,{});
  if(res.error)alert(res.error); else if(res.dm&&res.dm.error)alert('Assigned, but the DM failed: '+res.dm.error);
+ openIds.delete(id);
  if(btn){btn.disabled=false;btn.textContent=label}
  await loadItems(true)}
 async function chat(id){const ta=document.getElementById('t'+id);const v=ta.value.trim();const imgs=(pendingImgs[id]||[]).map(x=>x.path);if(!v&&!imgs.length)return;ta.value='';pendingImgs[id]=[];renderImgs(id);const el=document.getElementById('c'+id);el.innerHTML+=`<div class="u">▸ ${esc(v)}${imgs.length?' <span class="muted">+'+imgs.length+' image'+(imgs.length>1?'s':'')+'</span>':''}</div><div class="working"><span class="st busy"></span> sending…</div>`;el.scrollTop=el.scrollHeight;await post(`/api/items/${id}/send`,{text:v,images:imgs});el.dataset.fp='';setTimeout(()=>loadChat(id),1500);ta.focus()}

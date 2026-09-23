@@ -86,6 +86,24 @@ def ensure_live(item, seed=None):
     time.sleep(2.5); live.send(pane, text)
     return {"sid": sid, "pane": pane, "status": "busy"}
 
+def _claim_after_dbr(iid, uid, wait=420):
+    """dbr done often creates or closes the ticket. Once the session goes idle, pin whatever key it
+    produced onto the item and hand the ticket over open rather than done."""
+    end = time.time() + wait
+    while time.time() < end:
+        time.sleep(10)
+        it = db.get_item(iid)
+        if not it: return
+        lv = _live_index().get(it.get("live_sid") or "")
+        if lv and lv["status"] == "busy": continue
+        msgs = live.transcript(it["live_sid"], limit=30) if it.get("live_sid") else []
+        if msgs: cs.pin_links(it, "\n".join(m["text"] for m in msgs if m["role"] == "assistant"))
+        key = (db.get_item(iid) or {}).get("shipyard_key")
+        if key:
+            try: shipyard.call("update_task", task_id=key, assignee_id=uid, status="todo")
+            except Exception as e: print(f"post-dbr assign failed: {e}", file=sys.stderr, flush=True)
+        return
+
 def _watcher():
     """Every 2s: finish any session that registered after we stopped waiting, and answer trust prompts on the way."""
     while True:
@@ -179,7 +197,8 @@ def action(iid, kind, body):
         name, uid, slack_uid = TEAM[assignee]
         db.update_item(iid, owner="team", assignee=assignee)
         if it.get("shipyard_key"):
-            try: shipyard.call("update_task", task_id=it["shipyard_key"], assignee_id=uid)
+            # dbr done closes the ticket as Justin's; hand it over open, not done
+            try: shipyard.call("update_task", task_id=it["shipyard_key"], assignee_id=uid, status="todo")
             except Exception as e: print(f"shipyard assign failed: {e}", file=sys.stderr, flush=True)
         links = []
         if it.get("prd_url"): links.append("PRD: " + it["prd_url"])
@@ -189,9 +208,14 @@ def action(iid, kind, body):
         sent = None
         try: sent = slack.dm(slack_uid, text)
         except Exception as e: sent = {"error": str(e)[:200]}
+        # close the loop: tell the session, run dbr done in it, then archive the card
         lv = _live_index().get(it.get("live_sid") or "")
-        if lv: live.send(lv["pane"], f"Handed this to {name}. Nothing needed from you on it.")
-        return {"item": db.get_item(iid), "dm": sent, "text": text, "to": name}
+        if lv:
+            live.send(lv["pane"], f"Handed this to {name}. Run dbr done to close it out.")
+            time.sleep(1.0); live.send(lv["pane"], "run dbr done")
+            threading.Thread(target=_claim_after_dbr, args=(iid, uid), daemon=True).start()
+        db.update_item(iid, status="archived", archived_at=db.now())
+        return {"item": db.get_item(iid), "dm": sent, "text": text, "to": name, "archived": True, "dbr": bool(lv)}
     if kind == "done":
         db.update_item(iid, status="archived", archived_at=db.now())
         return {"item": db.get_item(iid)}
@@ -213,7 +237,12 @@ def team_view(refresh=False):
         # Backlog is a wish list, not work in hand. Load counts only tickets that are actually moving.
         active = [t for t in mine + others if t.get("status") in ("todo", "in_progress", "in_review")]
         load = len(active) + c["week"] / 5
-        c.update({"tickets_from_me": mine, "tickets_from_others": others, "active_tickets": len(active),
+        handed = [{"key": (i.get("shipyard_key") or "—"), "title": i["title"][:90],
+                   "url": (f"https://{SHIPYARD_HOST}/t/" + i["shipyard_key"]) if i.get("shipyard_key") else (i.get("prd_url") or "#"),
+                   "status": "handed off", "complexity": {"light": "S", "medium": "M", "heavy": "L"}.get(i.get("lift") or "", ""),
+                   "progress": 5, "prd_url": i.get("prd_url"), "at": i.get("updated_at")}
+                  for i in db.list_items("all") if i.get("assignee") == login and i.get("owner") == "team"]
+        c.update({"handed_off": handed, "tickets_from_me": mine, "tickets_from_others": others, "active_tickets": len(active),
                   "backlog_tickets": len(mine) + len(others) - len(active), "load": round(load, 1),
                   "bandwidth": "available" if load < 4 else "normal" if load < 9 else "loaded"})
         out.append(c)
