@@ -1,0 +1,232 @@
+<!doctype html><html><head><meta charset="utf-8"><base target="_blank"><title>Command Center</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230f1117%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2222%22%20fill%3D%22none%22%20stroke%3D%22%237aa2f7%22%20stroke-width%3D%223%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2213%22%20fill%3D%22none%22%20stroke%3D%22%237aa2f7%22%20stroke-width%3D%223%22%20opacity%3D%22.7%22/%3E%3Cpath%20d%3D%22M32%2010v8M32%2046v8M10%2032h8M46%2032h8%22%20stroke%3D%22%237aa2f7%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M32%2032L50%2018%22%20stroke%3D%22%239ece6a%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%224.5%22%20fill%3D%22%239ece6a%22/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<style>
+:root{--bg:#0f1117;--panel:#171a23;--line:#262a36;--text:#e6e8ef;--muted:#8b90a0;--accent:#7aa2f7;--ok:#9ece6a;--warn:#e0af68;--bad:#f7768e;--purple:#bb9af7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 -apple-system,Inter,Segoe UI,sans-serif}
+header{display:flex;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+header h1{font-size:14px;margin:0 16px 0 0;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tabs button{background:transparent;color:var(--muted);border:1px solid transparent;padding:6px 12px;border-radius:6px;cursor:pointer}.tabs button.on{border-color:var(--accent);color:var(--accent)}
+main{padding:16px 20px;max-width:none}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+.bar{display:flex;gap:8px;margin-bottom:10px}.bar input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:6px;font-size:14px}.bar input.note{flex:.8}
+button.p{background:var(--accent);color:#0b0d13;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}button.s{background:transparent;border:1px solid var(--line);color:var(--muted);padding:4px 8px;border-radius:5px;cursor:pointer;font-size:12px}button.s:hover{color:var(--text);border-color:var(--muted)}
+.row{border:1px solid var(--line);border-radius:8px;background:var(--panel);margin-bottom:8px}
+.row .hd{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;cursor:pointer}.row .hd input[type=checkbox]{margin-top:3px;width:16px;height:16px;cursor:pointer}
+.row .ti{flex:1;min-width:0}.row .ti b{font-weight:500}.row .m{color:var(--muted);font-size:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.tag{padding:1px 6px;border-radius:4px;font-size:11px;border:1px solid var(--line)}.tag.PASS{color:var(--ok)}.tag.WARN{color:var(--warn)}.tag.BLOCK{color:var(--bad)}.tag.team{color:var(--accent)}.tag.prd{color:var(--purple)}
+.row .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.row .body{display:none;border-top:1px solid var(--line);padding:10px 12px}.row.open .body{display:block}
+.chat{background:#0b0d13;border:1px solid var(--line);border-radius:6px;padding:10px;max-height:420px;overflow:auto;font-size:13px;white-space:pre-wrap}
+.chat .u{color:var(--accent);margin:8px 0 2px}.chat .a{color:var(--text);margin-bottom:8px}.chat .a:not(:last-child){border-bottom:1px dashed var(--line);padding-bottom:8px}
+.chatin{display:flex;gap:6px;margin-top:8px}.chatin textarea{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:6px;font:13px/1.4 inherit;min-height:44px}
+input.inl{background:transparent;border:0;border-bottom:1px dashed var(--line);color:var(--text);width:110px;font-size:12px}
+.note{color:var(--warn);font-size:12px}.muted{color:var(--muted)}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:12px}
+.card h3{margin:0 0 8px;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+.bw{padding:2px 10px;border-radius:10px;font-size:12px}.bw.available{background:#1f3b26;color:var(--ok)}.bw.normal{background:#2a2f3f}.bw.loaded{background:#3b1f2b;color:var(--bad)}
+.stats{display:flex;gap:22px;margin:6px 0 10px}.stats div b{display:block;font-size:22px;font-weight:600}.stats div small{color:var(--muted)}
+.spark{display:flex;gap:3px;align-items:flex-end;height:44px;margin:4px 0 2px}.spark i{flex:1;background:var(--accent);opacity:.75;border-radius:2px 2px 0 0;min-height:2px}.spark i.we{opacity:.25}
+.dows{display:flex;gap:3px}.dows span{flex:1;text-align:center;font-size:9px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase}
+.prog{height:6px;background:#22242c;border-radius:3px;overflow:hidden;width:90px;display:inline-block;vertical-align:middle}.prog i{display:block;height:100%;background:var(--ok)}
+h2.fold{margin-top:8px;cursor:pointer;user-select:none}h2.fold:hover{color:var(--text)}h2.fold i{font-style:normal;display:inline-block;width:10px}
+.rock{border-left:3px solid var(--accent)}.rock .blurb{color:var(--muted);margin:-4px 0 8px}
+.eng{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+#dag{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto}
+.pr{display:flex;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;align-items:flex-start;width:100%}.pr .ti{flex:1;min-width:0}.pr .pa{display:flex;gap:4px;flex:none;margin-left:auto}.pr .pa button{white-space:nowrap}.mg{font-size:11px;padding:0 5px;border-radius:3px;border:1px solid var(--line)}.mg.BEHIND{color:var(--warn)}.mg.CLEAN{color:var(--ok)}.mg.BLOCKED{color:var(--muted)}.mg.DIRTY{color:var(--bad)}.pr:hover{background:#1e2230}.dot{width:8px;height:8px;border-radius:50%;background:#444;margin-top:6px;flex:none}.dot.green{background:var(--ok)}.dot.failing{background:var(--bad)}.dot.pending{background:var(--warn)}
+.two{display:grid;grid-template-columns:1fr 6px var(--prw,470px);gap:10px}.divider{cursor:col-resize;background:var(--line);border-radius:3px;margin:8px 0}.divider:hover,.divider.on{background:var(--accent)}.st.booting{background:var(--warn);animation:pulse 2.4s infinite}
+
+.live .hd{padding:8px 12px}.st{width:9px;height:9px;border-radius:50%;background:#555;margin-top:6px;flex:none}.st.idle{background:var(--ok)}.st.shell{background:#666}.st.busy{background:var(--warn);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}.tr{background:#0b0d13;border:1px solid var(--line);border-radius:6px;padding:10px;max-height:460px;overflow:auto;font-size:13px;white-space:pre-wrap}
+.tr .u{color:var(--accent);margin:8px 0 2px}.tr .a{margin-bottom:8px;border-bottom:1px dashed var(--line);padding-bottom:8px}.tr .tool{color:var(--muted);font-size:12px}
+.scr{font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:#c0c5d0;background:#000;border-radius:6px;padding:8px;white-space:pre;overflow:auto;max-height:300px;display:none}.row.showscr .scr{display:block}.row.showscr .tr{display:none}
+
+.md p{margin:0 0 8px}.md ul,.md ol{margin:0 0 8px 18px}.md code{background:#1e2230;padding:1px 4px;border-radius:3px;font-size:12px}.md pre{background:#000;padding:8px;border-radius:6px;overflow:auto;font-size:12px}.md h1,.md h2,.md h3{font-size:14px;margin:10px 0 4px;text-transform:none;letter-spacing:0;color:var(--text)}.md table{margin:6px 0}.md a{color:var(--accent)}
+.slots{display:grid;grid-template-columns:90px 1fr auto;gap:6px 10px;align-items:center;margin:4px 0 10px;font-size:12px}.slots label{color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-size:10px}.slots input{background:#0b0d13;border:1px solid var(--line);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px}.slots a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.title-edit{background:transparent;border:0;border-bottom:1px dashed var(--line);color:var(--text);font:inherit;font-weight:500;width:100%;padding:0}
+.hd .ti b{cursor:text}
+
+.newbox{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+.newbox input,.newbox textarea{background:#0b0d13;border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:6px;font:14px/1.45 inherit;width:100%;resize:vertical;min-height:44px}
+.newrow{display:flex;justify-content:space-between;align-items:center}.newrow label{color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer}
+.note{white-space:pre-wrap;cursor:pointer}.note.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.note.clamp::after{content:''}
+.notebox{margin:0 0 10px;display:flex;flex-direction:column;gap:6px}.notebox textarea{width:100%;background:#0b0d13;border:1px solid var(--line);color:var(--text);padding:8px;border-radius:6px;font:13px/1.45 inherit;min-height:60px;resize:vertical}
+.sel{background:#0b0d13;color:var(--text);border:1px solid var(--line);border-radius:5px;font-size:12px;padding:3px 6px}
+.working{display:flex;gap:8px;align-items:center;color:var(--warn);font-size:12px;margin-top:6px}.working .st{margin:0}
+.imgs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.imgs img{height:54px;border-radius:4px;border:1px solid var(--line)}
+.chatin textarea.drop{border-color:var(--accent)}
+
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 6px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+.newbox .pill input[type=checkbox]{appearance:none;-webkit-appearance:none;width:12px;height:12px;min-height:0;min-width:0;padding:0;margin:0;border-radius:50%;border:1px solid var(--muted);background:transparent;cursor:pointer;flex:none}.newbox .pill input[type=checkbox]:checked{background:var(--ok);border-color:var(--ok)}.newbox .pill input[type=checkbox]:focus{outline:none;box-shadow:0 0 0 2px rgba(122,162,247,.35)}.pill:has(input:checked){color:var(--text);border-color:var(--ok)}
+.notebox input{background:#0b0d13;border:1px solid var(--line);color:var(--text);padding:7px 8px;border-radius:6px;font:13px/1.45 inherit}
+
+.prsec{margin:10px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:3px}
+.prg{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:8px 10px;align-items:start;padding:8px;border-radius:6px;width:100%}.prg:hover{background:#1e2230}
+.prg .d{width:8px;height:8px;border-radius:50%;background:#444;margin-top:6px}.prg .d.green{background:var(--ok)}.prg .d.failing{background:var(--bad)}.prg .d.pending{background:var(--warn)}
+.prg .tx{min-width:0;cursor:pointer}.prg .tx b{font-weight:600}.prg .tx .ttl{display:block;color:var(--muted);font-size:13px;white-space:normal}.prg .tx .sub{color:var(--muted);font-size:12px}
+.prg .btns{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.prg .btns button{white-space:nowrap}
+
+.row{border-left:3px solid transparent}
+.row.light{border-left-color:var(--ok)}.row.medium{border-left-color:var(--warn)}.row.heavy{border-left-color:var(--bad)}
+.lift{background:#0b0d13;color:var(--muted);border:1px solid var(--line);border-radius:5px;font-size:11px;padding:3px 5px}
+.lift.light{color:var(--ok);border-color:var(--ok)}.lift.medium{color:var(--warn);border-color:var(--warn)}.lift.heavy{color:var(--bad);border-color:var(--bad)}
+.slots .asg{background:#0b0d13;border:1px solid var(--line);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px}
+.chatin{align-items:flex-start}.chatin button{align-self:flex-start;height:38px;min-width:76px;padding:0 14px;border-radius:6px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;justify-content:center}.chatin .stop{background:transparent;border:1px solid var(--line);color:var(--muted)}.chatin .stop:hover{color:var(--text);border-color:var(--muted)}
+</style></head><body>
+<header><h1>Command Center</h1><div class="tabs"><button class="on" onclick="tab('intake',this)">Intake</button><button onclick="tab('team',this)">Team</button><button onclick="tab('roadmap',this)">Roadmap</button></div></header>
+<main>
+<section id="intake">
+  <div class="two"><div>
+    <div class="newbox">
+      <input id="in" placeholder="Slack link or the ask…">
+      <textarea id="innote" placeholder="First note (optional). Say what you already think this is and what you want done — it becomes the opening message of the session." rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+      <input id="ingran" placeholder="Granola link (or paste the notes) — optional">
+      <div class="newrow"><div style="display:flex;gap:10px;align-items:center"><label class="pill"><input type="checkbox" id="instart" checked><span>Start a Claude Code session</span></label><select id="inlift" class="lift" title="lift"><option value="">lift?</option><option value="light">light</option><option value="medium">medium</option><option value="heavy">heavy</option></select><select id="inmodel" class="sel"><option value="fable">Fable 5.1</option><option value="opus">Opus 5</option><option value="sonnet">Sonnet 5</option></select></div><button class="p" onclick="addItem()">New</button></div>
+    </div>
+    <h2>Work items <span class="muted" id="citems"></span> <select id="sortby" class="sel" style="margin-left:10px" onchange="try{localStorage.setItem('cc.sort',this.value)}catch(e){};loadItems(true)"><option value="lift">lightest first</option><option value="added_desc">newest first</option><option value="added_asc">oldest first</option></select> <label class="muted" style="font-weight:400;margin-left:10px"><input type="checkbox" id="showtools" onchange="for(const id of openIds)loadChat(id)"> show tool calls</label></h2><div id="items"></div>
+    <h2><a href="#" target="_self" onclick="toggleArch();return false">Archived</a> <span class="muted" id="carch"></span></h2><div id="arch" style="display:none"></div>
+  </div><div class="divider" id="divider" title="drag to resize"></div><div>
+    <h2>My PRs <button class="s" onclick="loadMine(true)">↻</button></h2><div id="mine_prs" class="muted">loading…</div>
+  </div></div>
+</section>
+<section id="team" style="display:none"><p class="muted">Commits per day from GitHub, tickets from Shipyard. Load = open tickets + this week's commits ÷ 5. <button class="s" onclick="loadTeam(true)">refresh GitHub</button></p><div id="teamcards">loading…</div></section>
+<section id="roadmap" style="display:none">
+  <p class="muted">Big rocks at the top; every open Shipyard ticket on the team or on you hangs off one. <button class="s" onclick="mapRoad()">map unmapped with Claude</button></p>
+  <div id="rocks"></div><h2>By engineer</h2><div class="eng" id="byeng"></div><h2>Graph</h2><div id="dag"></div>
+</section>
+</main>
+<script>
+mermaid.initialize({startOnLoad:false,theme:'dark',securityLevel:'loose'});
+const J=(u,o)=>fetch(u,o).then(r=>r.json());const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const post=(u,b)=>J(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});const patch=(u,b)=>J(u,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+function tab(n,b){document.querySelectorAll('main section').forEach(s=>s.style.display=s.id===n?'':'none');document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));if(n==='team')loadTeam();if(n==='roadmap')loadRoad()}
+let openIds=new Set(),showArch=false;const liveOf={};
+const typing=()=>{const e=document.activeElement;return e&&(e.tagName==='TEXTAREA'||e.tagName==='INPUT')&&e.closest('.row')};
+const sortMode=()=>document.getElementById('sortby').value;
+async function loadItems(force){if(!force&&typing())return;const d=await J('/api/items?sort='+sortMode());d.forEach(t=>{liveOf[t.id]=t.live_sid||null});document.getElementById('citems').textContent=d.length;
+ reconcile(document.getElementById('items'),d,'nothing open');
+ if(showArch){const a=await J('/api/items?archived=1&sort='+sortMode());document.getElementById('carch').textContent=a.length;reconcile(document.getElementById('arch'),a,'')}}
+function reconcile(box,list,emptyText){const want=new Set(list.map(t=>t.id));
+ for(const r of [...box.querySelectorAll(':scope > .row')]) if(!want.has(r.dataset.id)) r.remove();
+ const empty=box.querySelector(':scope > .empty');if(empty)empty.remove();
+ let prev=null;
+ for(const t of list){let r=box.querySelector(`:scope > .row[data-id="${t.id}"]`);
+  if(!r){r=document.createElement('div');r.className='row';r.id='r'+t.id;r.dataset.id=t.id;r.innerHTML=head(t)+body(t);if(openIds.has(t.id))r.classList.add('open')}
+  r.classList.remove('light','medium','heavy');if(t.lift)r.classList.add(t.lift);
+  else{const h=r.querySelector(':scope > .hd');const nh=head(t);if(!r.querySelector('.title-edit')&&h.dataset.sig!==sig(t)){const tmp=document.createElement('div');tmp.innerHTML=nh;h.replaceWith(tmp.firstElementChild)}
+   const prevT=window._items&&window._items[t.id];window._items=window._items||{};window._items[t.id]=t;const sl=document.getElementById('sl'+t.id);const anyEdit=window._edit&&Object.keys(window._edit).some(k=>k.startsWith(t.id));if(sl&&!anyEdit&&!sl.contains(document.activeElement)&&(!prevT||sig(prevT)!==sig(t)))sl.outerHTML=slots(t)}
+  if(prev){if(prev.nextElementSibling!==r)prev.after(r)}else if(box.firstElementChild!==r)box.prepend(r);prev=r}
+ if(!list.length&&emptyText){const e=document.createElement('div');e.className='muted empty';e.textContent=emptyText;box.appendChild(e)}}
+const sig=t=>JSON.stringify([t.title,t.note,t.live&&t.live.status,t.requester,t.permalink,t.shipyard_key,t.prd_url,t.links,t.assignee,t.model,t.lift]);
+window._cfg={};const SY=()=>'https://'+(window._cfg.shipyard||'shipyard.local');
+function chips(t){return (t.links||[]).map(l=>`<a class="tag" href="${l.url}" target="_blank" title="${l.url}">${l.kind==='pr'?'PR '+l.url.split('/').slice(-3,-2)[0]+' #'+l.url.split('/').pop():l.kind==='radar'?'Radar':'Slack'}</a>`).join(' ')}
+function dot(t){const st=t.live?t.live.status:'none';return `<span class="st ${st}" title="${st}"></span>`}
+function head(t){const sh=t.shipyard_key?`<a href="${SY()}/t/${t.shipyard_key}" target="_blank"><b>${t.shipyard_key}</b></a>`:'<span class="muted">no ticket</span>';const prd=t.prd_url?`<a href="${t.prd_url}" target="_blank"><b>PRD</b></a>`:'<span class="muted">no PRD</span>';const sl=t.permalink?`<a href="${t.permalink}" target="_blank">slack</a>`:'';
+ const live=t.live?`<span class="muted">${t.live.status}</span>`:'<span class="muted">not started</span>';
+ return `<div class="hd" data-sig='${sig(t).replace(/'/g,"&#39;")}' onclick="toggle('${t.id}',event)"><input type="checkbox" onclick="event.stopPropagation();done('${t.id}')" title="done → archive">${dot(t)}
+ <div class="ti"><b id="ttl${t.id}" onclick="event.stopPropagation();editTitle('${t.id}')" title="click to rename">${esc(t.title)}</b>${t.note?`<div class="note clamp" onclick="event.stopPropagation();this.classList.toggle('clamp')" title="click to expand">${esc(t.note)}</div>`:''}<div class="m">${live} ${t.requester?esc(t.requester):''} ${sl} · ${sh} · ${prd} ${chips(t)} ${t.assignee?'<span class="tag team">→ '+esc(t.assignee.split('_')[0])+'</span>':''}</div></div>
+ <div class="acts" onclick="event.stopPropagation()">${t.live?'':`<button class="s" onclick="act('${t.id}','start',this)">Start Claude session</button>`}<button class="s" onclick="act('${t.id}','prd_live',this)">PRD</button><select class="lift ${t.lift||''}" title="lift — sorts lightest first" onchange="patch('/api/items/${t.id}',{lift:this.value}).then(()=>loadItems(true))"><option value="" ${!t.lift?'selected':''}>lift?</option><option value="light" ${t.lift==='light'?'selected':''}>light</option><option value="medium" ${t.lift==='medium'?'selected':''}>medium</option><option value="heavy" ${t.lift==='heavy'?'selected':''}>heavy</option></select><select class="sel" title="model for this session" onchange="post('/api/items/${t.id}/model',{model:this.value}).then(()=>loadItems(true))"><option value="fable" ${(t.model||'fable')==='fable'?'selected':''}>Fable 5.1</option><option value="opus" ${t.model==='opus'?'selected':''}>Opus 5</option><option value="sonnet" ${t.model==='sonnet'?'selected':''}>Sonnet 5</option></select><button class="s" onclick="act('${t.id}','team',this)">→ team</button><button class="s" onclick="act('${t.id}','dbr_done',this)">dbr done</button></div></div>`}
+function slot(id,key,label,href,ph,xf){const v=window._items[id][key]||'';const editing=window._edit&&window._edit[id+key];
+ if(v&&!editing){return `<label>${label}</label><a href="${href(v)}" title="${esc(v)}">${esc(key==='shipyard_key'?v:key==='prd_url'?(v.split('/d/')[1]?'Shipyard doc '+v.split('/d/')[1].slice(0,8):v):'thread')}</a><button class="s" onclick="editSlot('${id}','${key}')">edit</button>`}
+ return `<label>${label}</label><input id="s_${key}${id}" value="${esc(v)}" placeholder="${ph}" onkeydown="if(event.key==='Enter')saveSlot('${id}','${key}')"><button class="s" onclick="saveSlot('${id}','${key}')">save</button>`}
+function slots(t){window._items=window._items||{};window._items[t.id]=t;return `<div class="slots" id="sl${t.id}">
+  ${slot(t.id,'permalink','Slack',v=>v,'paste the thread permalink')}
+  ${slot(t.id,'shipyard_key','Shipyard',v=>SY()+'/t/'+v,'ticket key…')}
+  ${slot(t.id,'prd_url','PRD',v=>v,'ticket doc url…')}
+  <label>Assignee</label><select id="s_assignee${t.id}" class="asg" onchange="patch('/api/items/${t.id}',{assignee:this.value}).then(r=>{window._items['${t.id}']=r;loadItems(true)})"><option value="">unassigned</option>${(window._roster||[]).map(o=>`<option value="${o.login}" ${t.assignee===o.login?'selected':''}>${esc(o.name)}</option>`).join('')}</select><span></span>
+ </div>`}
+function editSlot(id,key){window._edit=window._edit||{};window._edit[id+key]=true;document.getElementById('sl'+id).outerHTML=slots(window._items[id]);const i=document.getElementById('s_'+key+id);if(i){i.focus();i.select()}}
+async function saveSlot(id,key){const i=document.getElementById('s_'+key+id);let v=i?i.value.trim():'';if(key==='shipyard_key')v=v.toUpperCase().replace(/^.*\/t\//,'');
+ const r=await patch('/api/items/'+id,{[key]:v});if(r&&r.error){alert(r.error);return}if(window._edit)delete window._edit[id+key];window._items[id]=r;document.getElementById('sl'+id).outerHTML=slots(r);loadItems(true)}
+function body(t){const ta=(f,ph)=>`<textarea placeholder="${ph}" onblur="if(this.value!==(window._items['${t.id}'].${f}||''))patch('/api/items/${t.id}',{${f}:this.value}).then(()=>loadItems(true))">${esc(t[f]||'')}</textarea>`;
+ return `<div class="body"><div class="notebox">${ta('note','first-look note + context — saved when you click away, and sent into the session if it is running')}<input placeholder="Granola link or notes — saved on blur" value="${esc(t.granola||'')}" onblur="if(this.value!==(window._items['${t.id}'].granola||''))patch('/api/items/${t.id}',{granola:this.value}).then(()=>loadItems(true))"></div>${slots(t)}${t.body?`<div class="muted" style="font-size:12px;margin-bottom:8px">${esc(t.body).slice(0,500)}</div>`:''}
+ <div class="chat md" id="c${t.id}" data-fp=""><span class="muted">${t.live?'loading…':'no session yet — Start Claude session'}</span></div>
+ <div class="imgs" id="im${t.id}"></div><div class="chatin"><textarea id="t${t.id}" placeholder="talk to this item's Claude session… (Enter sends, Shift+Enter newline, drop or paste screenshots)" onkeydown="keyd(event,'${t.id}')" ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')" ondrop="this.classList.remove('drop');dropImgs(event,'${t.id}')" onpaste="pasteImgs(event,'${t.id}')"></textarea><button class="p" onclick="chat('${t.id}')">Send</button><button class="s stop" onclick="stopTurn('${t.id}',this)" title="interrupt what this session is doing (Esc)">Stop</button></div></div>`}
+const pendingImgs={};
+async function stopTurn(id,btn){const t=btn.textContent;btn.textContent='…';const r=await post(`/api/items/${id}/interrupt`);if(r.error)alert(r.error);btn.textContent=t;setTimeout(()=>loadChat(id),1200)}
+async function addImg(id,file){const data=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file)});const r=await post(`/api/items/${id}/upload`,{name:file.name||'screenshot.png',data});if(!r.path)return;(pendingImgs[id]=pendingImgs[id]||[]).push({path:r.path,data});renderImgs(id)}
+function renderImgs(id){const box=document.getElementById('im'+id);if(!box)return;box.innerHTML=(pendingImgs[id]||[]).map((x,i)=>`<img src="${x.data}" title="${x.path}" onclick="pendingImgs['${id}'].splice(${i},1);renderImgs('${id}')">`).join('')}
+function dropImgs(e,id){e.preventDefault();for(const f of e.dataTransfer.files)if(f.type.startsWith('image/'))addImg(id,f)}
+function pasteImgs(e,id){for(const it of e.clipboardData.items)if(it.type.startsWith('image/')){e.preventDefault();addImg(id,it.getAsFile())}}
+function keyd(e,id){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();chat(id)}}
+const val=id=>document.getElementById(id).value.trim();
+async function save(id,b){await patch('/api/items/'+id,b);loadItems(true)}
+function editTitle(id){const b=document.getElementById('ttl'+id);const cur=b.textContent;const i=document.createElement('input');i.className='title-edit';i.value=cur;b.replaceWith(i);i.focus();i.select();
+ const fin=async()=>{const v=i.value.trim()||cur;await patch('/api/items/'+id,{title:v});loadItems(true)};i.onblur=fin;i.onkeydown=e=>{if(e.key==='Enter'){i.onblur=null;fin()}if(e.key==='Escape'){i.onblur=null;loadItems(true)}}}
+function toggle(id,e){if(e.target.tagName==='A'||e.target.tagName==='INPUT')return;const r=document.getElementById('r'+id);r.classList.toggle('open');if(r.classList.contains('open')){openIds.add(id);loadChat(id)}else openIds.delete(id)}
+function render(text){try{return marked.parse(text,{breaks:true})}catch(e){return esc(text)}}
+async function loadChat(id){const el=document.getElementById('c'+id);if(!el)return;const tools=document.getElementById('showtools').checked;const d=await J(`/api/items/${id}/messages${tools?'?tools=1':''}`);
+ const st=document.querySelector('#r'+id+' .st');if(st&&d.status)st.className='st '+d.status;
+ const fp=d.messages.length+':'+(d.messages.length?d.messages[d.messages.length-1].text.length:0)+':'+tools+':'+d.status+':'+(d.last_tool||'');if(el.dataset.fp===fp)return;el.dataset.fp=fp;
+ const atBottom=el.scrollHeight-el.scrollTop-el.clientHeight<60;const top=el.scrollTop;
+ el.innerHTML=(d.messages.map(m=>m.role==='user'?`<div class="u">▸ ${esc(m.text)}</div>`:`<div class="a">${render(m.text)}</div>`).join('')||`<span class="muted">${liveOf[id]?'waiting for the first reply…':'no session yet — Start Claude session'}</span>`)
+  +(d.status==='busy'?`<div class="working"><span class="st busy"></span> working${d.last_tool?' — '+esc(d.last_tool):'…'}</div>`:'');
+ el.scrollTop=atBottom?el.scrollHeight:top}
+async function act(id,kind,btn){const r=document.getElementById('r'+id);r.classList.add('open');openIds.add(id);
+ const label=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent=kind==='start'?'starting…':kind==='team'?'checking…':'sent'}
+ try{
+  if(kind==='team')return await handoff(id,btn,label);
+  const res=await post(`/api/items/${id}/${kind}`);if(res&&res.error)alert(res.error);
+ }catch(e){alert(String(e))}
+ finally{if(btn){btn.disabled=false;btn.textContent=label}}
+ await loadItems(true);setTimeout(()=>loadChat(id),2000)}
+async function handoff(id,btn,label){
+ const pre=await post(`/api/items/${id}/team`,{preview:true});
+ if(pre.need_assignee){alert('Set the Assignee field on this card first.\n\n'+pre.options.map(o=>o.login+'  ('+o.name+')').join('\n'));
+  if(btn){btn.disabled=false;btn.textContent=label}const a=document.getElementById('s_assignee'+id);if(a){a.focus();a.scrollIntoView({block:'center'})}return}
+ if(!confirm('Slack this to '+pre.to+'?\n\n'+pre.preview)){if(btn){btn.disabled=false;btn.textContent=label}return}
+ if(btn)btn.textContent='sending…';
+ const res=await post(`/api/items/${id}/team`,{});
+ if(res.error)alert(res.error); else if(res.dm&&res.dm.error)alert('Assigned, but the DM failed: '+res.dm.error);
+ if(btn){btn.disabled=false;btn.textContent=label}
+ await loadItems(true)}
+async function chat(id){const ta=document.getElementById('t'+id);const v=ta.value.trim();const imgs=(pendingImgs[id]||[]).map(x=>x.path);if(!v&&!imgs.length)return;ta.value='';pendingImgs[id]=[];renderImgs(id);const el=document.getElementById('c'+id);el.innerHTML+=`<div class="u">▸ ${esc(v)}${imgs.length?' <span class="muted">+'+imgs.length+' image'+(imgs.length>1?'s':'')+'</span>':''}</div><div class="working"><span class="st busy"></span> sending…</div>`;el.scrollTop=el.scrollHeight;await post(`/api/items/${id}/send`,{text:v,images:imgs});el.dataset.fp='';setTimeout(()=>loadChat(id),1500);ta.focus()}
+async function done(id){await post(`/api/items/${id}/done`);openIds.delete(id);loadItems(true)}
+async function addItem(){const i=document.getElementById('in'),n=document.getElementById('innote'),st=document.getElementById('instart');const v=i.value.trim();if(!v)return;
+ const b=/slack\.com\/archives\//.test(v)?{link:v}:{text:v};b.note=n.value.trim();b.start=st.checked;b.model=document.getElementById('inmodel').value;b.granola=document.getElementById('ingran').value.trim();b.lift=document.getElementById('inlift').value;i.value='';n.value='';n.style.height='';document.getElementById('ingran').value='';i.placeholder=b.start?'starting a Claude Code session…':'adding…';
+ const r=await post('/api/items',b);i.placeholder='Slack link or the ask…';if(r&&r.id){openIds.add(r.id)}await loadItems(true);if(r&&r.id)setTimeout(()=>loadChat(r.id),2500)}
+document.getElementById('in').addEventListener('keydown',e=>{if(e.key==='Enter')addItem()});document.getElementById('innote').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')addItem()});
+function toggleArch(){showArch=!showArch;document.getElementById('arch').style.display=showArch?'':'none';loadItems()}
+const PR_FAMILIES=[['DBT',r=>r==='dbt-snowflake'],['Snowflake',r=>/^snowflake/.test(r)],['Opp Generation',r=>r==='opp-generation'],['Pulse',r=>r==='pulse'],['Romwell / Twilight',r=>r==='twilight'||r==='romwell-skills'],['Other',r=>true]];
+async function loadMine(refresh){const d=await J('/api/prs/mine?enrich=1'+(refresh?'&refresh=1':''));const groups=PR_FAMILIES.map(([n,f])=>[n,[]]);
+ for(const p of d){const g=groups.find(([n],i)=>PR_FAMILIES[i][1](p.repo));g[1].push(p)}
+ const row=p=>`<div class="prg"><span class="d ${p.ci}"></span><div class="tx" onclick="window.open('${p.url}')"><b>${esc(p.repo)} #${p.number}</b> <span class="mg ${p.merge||''}">${p.merge||''}</span><span class="ttl">${esc(p.title)}</span><span class="sub">${p.ci} · ${esc(p.review||'')}${p.auto?' · auto-merge on':''}${p.draft?' · draft':''}</span></div>
+ <div class="btns"><button class="s" onclick="prMon('${p.url}',this)" title="start a Claude session running /github-pr-monitor on this PR">Monitor</button><button class="s" onclick="prAct('${p.url}','update',this)" title="merge master into this branch">Update branch</button>${p.auto?'':`<button class="s" onclick="prAct('${p.url}','automerge',this)">Auto-merge</button>`}${p.draft?`<button class="s" onclick="prAct('${p.url}','ready',this)">Ready</button>`:''}</div></div>`;
+ document.getElementById('mine_prs').innerHTML=groups.filter(([n,ps])=>ps.length).map(([n,ps])=>`<div class="prsec">${n} <span style="letter-spacing:0">· ${ps.length}</span></div>`+ps.map(row).join('')).join('')||'<div class="muted">none open</div>'}
+async function prMon(url,btn){btn.disabled=true;btn.textContent='starting…';const r=await post('/api/prs/monitor',{url,model:document.getElementById('inmodel').value});if(r.error)alert(r.error);if(r.item){openIds.add(r.item.id)}await loadItems(true);loadMine();if(r.item)setTimeout(()=>loadChat(r.item.id),2500)}
+async function prAct(url,action,btn){btn.disabled=true;btn.textContent='…';const r=await post('/api/prs/action',{url,action});if(!r.ok)alert(r.out||r.error);setTimeout(()=>loadMine(),1500)}
+async function loadTeam(refresh){const g=document.getElementById('teamcards');if(refresh)g.innerHTML='refreshing from GitHub (about 15s)…';const d=await J('/api/team'+(refresh?'?refresh=1':''));const max=Math.max(1,...d.flatMap(m=>m.series.map(s=>s.commits)));
+ g.innerHTML=d.map(m=>`<div class="card"><h3>${esc(m.name)} <span class="bw ${m.bandwidth}">${m.bandwidth} · load ${m.load}</span></h3>
+ <div class="stats"><div><b>${m.today}</b><small>commits today</small></div><div><b>${m.week}</b><small>this week</small></div><div><b>${m.avg_per_workday}</b><small>avg per workday, 14d</small></div><div><b>${m.active_tickets}</b><small>active tickets</small></div><div><b>${m.backlog_tickets}</b><small>in backlog</small></div><div><b>${m.tickets_from_me.length}</b><small>from me</small></div></div>
+ <div class="spark">${m.series.map(s=>`<i class="${['Sat','Sun'].includes(s.dow)?'we':''}" style="height:${Math.max(4,100*s.commits/max)}%" title="${s.day}: ${s.commits}"></i>`).join('')}</div><div class="dows">${m.series.map(s=>`<span>${s.dow[0]}</span>`).join('')}</div>
+ <div class="muted" style="font-size:12px;margin:6px 0 10px">${m.repos.map(r=>r[0]+' '+r[1]).join(' · ')}${m.fetched_at?' · fetched '+m.fetched_at.slice(5,16).replace('T',' '):''}</div>
+ ${tix('From me',m.tickets_from_me)}${tixOthers(m)}</div>`).join('')}
+function tixTable(ts){return `<table><thead><tr><th>Ticket</th><th>Status</th><th>Size</th><th>Progress</th></tr></thead><tbody>${ts.map(t=>`<tr><td><a target="_blank" href="${t.url||'#'}">${t.key}</a> ${esc(t.title)}</td><td>${esc(t.status)}</td><td>${t.complexity||''}</td><td><span class="prog"><i style="width:${t.progress||0}%"></i></span></td></tr>`).join('')}</tbody></table>`}
+function tix(label,ts){if(!ts.length)return'';return `<h2 style="margin-top:8px">${label} · ${ts.length}</h2>`+tixTable(ts)}
+// Work they picked up themselves is collapsed by default so a card reads as "what I handed this person".
+let teamOpen=new Set();try{teamOpen=new Set(JSON.parse(localStorage.getItem('cc.teamopen')||'[]'))}catch(e){}
+function tixOthers(m){const ts=m.tickets_from_others;if(!ts.length)return'';const open=teamOpen.has(m.login);
+ return `<h2 class="fold" onclick="toggleTix('${m.login}',this)"><i>${open?'\u25be':'\u25b8'}</i> From others · ${ts.length}</h2><div id="oth_${m.login}" style="display:${open?'':'none'}">${tixTable(ts)}</div>`}
+function toggleTix(login,el){const b=document.getElementById('oth_'+login),open=b.style.display==='none';
+ b.style.display=open?'':'none';el.querySelector('i').textContent=open?'\u25be':'\u25b8';
+ open?teamOpen.add(login):teamOpen.delete(login);try{localStorage.setItem('cc.teamopen',JSON.stringify([...teamOpen]))}catch(e){}}
+async function loadRoad(){const d=await J('/api/roadmap');
+ document.getElementById('rocks').innerHTML=d.rocks.filter(r=>r.id!=='none'||r.tasks.length).map(r=>`<div class="card rock"><h3>${esc(r.title)} <span class="muted" style="font-size:12px">${r.tasks.length} tickets</span></h3><div class="blurb">${esc(r.blurb)}</div>
+ <table><thead><tr><th style="width:150px">Ticket</th><th>Why it moves this rock</th><th style="width:130px">Who · status</th></tr></thead><tbody>${r.tasks.map(t=>`<tr><td><a target="_blank" href="${t.url}">${t.key}</a></td><td><b>${esc(t.title)}</b><br><span class="muted">${esc(t.rationale)||'<i>unmapped — click “map unmapped with Claude”</i>'}</span></td><td>${esc(t.engineer.split(' ')[0])} · ${esc(t.status)}<br><select onchange="remap('${t.key}',this.value)" style="background:#0b0d13;color:#e6e8ef;border:1px solid #262a36;border-radius:4px;font-size:11px">${d.rocks.map(x=>`<option value="${x.id}" ${x.id===r.id?'selected':''}>${esc(x.title.slice(0,28))}</option>`).join('')}</select></td></tr>`).join('')||'<tr><td colspan=3 class="muted">nothing mapped here yet</td></tr>'}</tbody></table></div>`).join('');
+ document.getElementById('byeng').innerHTML=Object.entries(d.by_engineer).map(([n,ts])=>`<div class="card"><h3>${esc(n)} <span class="muted" style="font-size:12px">${ts.length}</span></h3>${ts.map(t=>`<div class="pr" onclick="window.open('${t.url}')"><div class="ti"><b>${t.key}</b> <span class="tag">${esc(t.rock_id)}</span><br><small class="muted">${esc(t.title)}</small></div></div>`).join('')}</div>`).join('');
+ const el=document.getElementById('dag');try{const {svg}=await mermaid.render('dagsvg',d.mermaid);el.innerHTML=svg}catch(e){el.innerHTML='<pre class="muted">'+esc(d.mermaid)+'</pre>'}}
+async function remap(key,rock){await patch('/api/roadmap/map/'+key,{rock_id:rock,rationale:''});loadRoad()}
+async function mapRoad(){document.getElementById('rocks').innerHTML='<div class="muted">asking Claude to map unmapped tickets (up to a minute)…</div>';await post('/api/roadmap/map');loadRoad()}
+try{const sv=localStorage.getItem('cc.sort');if(sv)document.getElementById('sortby').value=sv}catch(e){}
+try{const sv=localStorage.getItem('cc.sort');if(sv)document.getElementById('sortby').value=sv}catch(e){}
+J('/api/config').then(c=>{window._cfg=c;window._roster=c.roster;loadItems(true)});
+loadItems(true);loadMine();setInterval(()=>loadItems(false),30000);
+setInterval(()=>{for(const id of openIds)loadChat(id)},2500);
+(function(){const d=document.getElementById('divider'),root=document.documentElement;try{const w=localStorage.getItem('cc.prw');if(w)root.style.setProperty('--prw',w+'px')}catch(e){}
+ let drag=false;d.addEventListener('mousedown',e=>{drag=true;d.classList.add('on');e.preventDefault()});
+ window.addEventListener('mousemove',e=>{if(!drag)return;const two=d.parentElement.getBoundingClientRect();const w=Math.max(260,Math.min(two.right-e.clientX,two.width-360));root.style.setProperty('--prw',w+'px')});
+ window.addEventListener('mouseup',()=>{if(!drag)return;drag=false;d.classList.remove('on');try{localStorage.setItem('cc.prw',parseInt(getComputedStyle(root).getPropertyValue('--prw')))}catch(e){}})})();
+
+
+</script></body></html>

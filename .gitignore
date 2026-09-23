@@ -1,0 +1,6 @@
+# Real config: team roster, Slack user ids, Shipyard uids, VIP tiers, big rocks. Never commit.
+cc/config.py
+
+__pycache__/
+*.pyc
+.DS_Store
