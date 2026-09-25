@@ -18,8 +18,13 @@ def pin_links(item, text):
     upd = {}
     m = KEY.search(text)
     if m and not item.get("shipyard_key"): upd["shipyard_key"] = m.group(0)
-    d = DOC.search(text)
-    if d and not item.get("prd_url"): upd["prd_url"] = d.group(0)
+    # The PRD slot: a Shipyard doc URL on a line that says PRD wins outright (that is how the PRD button asks
+    # the session to answer); otherwise the first doc URL seen fills an empty slot.
+    prd = next((DOC.search(l).group(0) for l in text.splitlines() if "prd" in l.lower() and DOC.search(l)), None)
+    if prd and prd != item.get("prd_url"): upd["prd_url"] = prd
+    else:
+        d = DOC.search(text)
+        if d and not item.get("prd_url"): upd["prd_url"] = d.group(0)
     links = json.loads(item.get("links") or "[]") if isinstance(item.get("links"), str) else (item.get("links") or [])
     have = {l["url"] for l in links}
     for kind, rx in (("pr", PR), ("radar", RADAR), ("slack", SLACKL)):
@@ -66,3 +71,4 @@ def prd(item):
     return send(item, (seed_prompt(item) + "\n\nThen: " + p) if not item.get("claude_session_id") else p)
 def dbr_done(item):
     return send(item, "run dbr done") if item.get("claude_session_id") else None
+

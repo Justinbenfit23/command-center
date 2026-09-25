@@ -15,10 +15,10 @@ TEAM = {
     "engineer-two_example":   ("Engineer Two",   "00000000-0000-0000-0000-000000000002", "U000000002"),
 }
 
-# The handoff DM. Fixed wording so every engineer gets the same ask.
+# The handoff DM: the PRD link and a bandwidth ask. No framing, no title, no ticket link.
 HANDOFF_TEMPLATE = (
-    "Assigning you {title}.\n\n{links}\n\n"
-    "If you don't have the bandwidth for this let me know. Otherwise please confirm. Thanks"
+    "{prd_url}\n\n"
+    "Can you confirm you have bandwidth to take this on?"
 )
 NOT_ASSIGNABLE = set()
 

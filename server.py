@@ -357,8 +357,11 @@ def action(iid, kind, body):
             return {"error": "Couldn't tell from the chat who this goes to. Set the Assignee field on the card, then press team again.",
                     "need_assignee": True, "options": [{"login": k, "name": v[0]} for k, v in TEAM.items() if k != ME]}
         name = TEAM[assignee][0]
+        # A preview must not move the card. It only answers "who did you read out of the chat?" so the
+        # UI can confirm before a DM leaves the building.
+        if body.get("preview"):
+            return {"to": name, "assignee": assignee, "guessed": not (body.get("assignee") or it.get("assignee"))}
         db.update_item(iid, owner="team", assignee=assignee)
-        if body.get("preview"): return {"to": name, "assignee": assignee}
         lv = _live_index().get(it.get("live_sid") or "")
         if lv:
             live.send(lv["pane"], f"Handed this to {name}. Run dbr done to close it out.")
