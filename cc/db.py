@@ -52,7 +52,24 @@ CREATE TABLE IF NOT EXISTS roadmap (
 CREATE INDEX IF NOT EXISTS roadmap_assignee ON roadmap(assignee, team_view, deleted);
 """
 
-def conn():
+class _Conn:
+    """`with conn() as c:` commits on success and CLOSES on exit. A bare sqlite3 connection used as a context
+    manager only commits; the file handles then live until garbage collection, and with the UI polling every
+    couple of seconds they piled up past launchd's 256-descriptor limit and took the server down
+    ("unable to open database file", "Too many open files")."""
+    def __init__(self): self.c = _connect()
+    def __enter__(self): return self.c
+    def __exit__(self, et, ev, tb):
+        try:
+            if et is None: self.c.commit()
+            else: self.c.rollback()
+        finally: self.c.close()
+    def close(self): self.c.close()
+    def __getattr__(self, name): return getattr(self.c, name)
+
+def conn(): return _Conn()
+
+def _connect():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     c = sqlite3.connect(DB_PATH, timeout=10); c.row_factory = sqlite3.Row
     c.execute("PRAGMA journal_mode=WAL"); c.executescript(SCHEMA)
