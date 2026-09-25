@@ -62,3 +62,6 @@ SHIPYARD_HOST = "tickets.example.com"
 RADAR_HOST = "dashboards.example.com"
 SLACK_HOST = "example.slack.com"
 TEAM_NAME = "Your Team"
+
+# The claude.ai artifact the EPD Rolling Roadmap lives in (Team tab mirrors it)
+EPD_ARTIFACT_URL = "https://claude.ai/artifact/your-roadmap-artifact-id"
