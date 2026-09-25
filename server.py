@@ -227,10 +227,26 @@ def _handoff_notify(iid, assignee):
     else: print(f"handoff DM sent to {name} for item {iid}", file=sys.stderr, flush=True)
     return err
 
+_HANDOFFS = set()   # items whose handoff is mid-flight: the reaper leaves their session alone until dbr done finishes
+
+def _reap_archived():
+    """An archived card must not keep a Claude session alive. Each one is ~2 GB, and the card is out of the working
+    list, so nobody is looking at it. Anything archived and still live is ended, except a handoff in progress."""
+    idx = _live_index()
+    for it in db.list_items("archived"):
+        if it["id"] in _HANDOFFS: continue
+        if it.get("live_sid") in idx or (it.get("live_pane") and not it.get("live_sid")):
+            _end_session(it["id"], "archived reaper")
+
 def _claim_after_dbr(iid, assignee, wait=420):
     """dbr done often creates or closes the ticket. Once the session goes idle, pin whatever key it
     produced onto the item, hand the ticket over open rather than done, and END the session — the card
     is already archived, so leaving Claude running just holds memory."""
+    _HANDOFFS.add(iid)
+    try: _claim_after_dbr_inner(iid, assignee, wait)
+    finally: _HANDOFFS.discard(iid)
+
+def _claim_after_dbr_inner(iid, assignee, wait):
     end = time.time() + wait
     while time.time() < end:
         time.sleep(10)
@@ -269,6 +285,9 @@ def _watcher():
                         live.answer_prompts(it["live_pane"])
         except Exception as e:
             print(f"watcher: {e}", file=sys.stderr, flush=True)
+        if int(time.time()) % 30 < 2:
+            try: _reap_archived()
+            except Exception as e: print(f"reaper: {e}", file=sys.stderr, flush=True)
         time.sleep(2)
 
 def team_loads():
