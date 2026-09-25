@@ -395,13 +395,17 @@ def action(iid, kind, body):
         # stays on disk, so Resume on the archived row brings it back if it is ever needed.
         lv = _live_index().get(it.get("live_sid") or "")
         pane = (lv or {}).get("pane") or it.get("live_pane"); pid = (lv or {}).get("pid")
-        if pane or pid: live.kill(pane, pid)
+        if pane or pid:
+            try: live.kill(pane, pid)
+            except Exception as e: return {"error": f"Could not end the session: {e}"}
         db.update_item(iid, status="archived", archived_at=db.now(), live_pane=None, pending_seed=None)
         return {"item": db.get_item(iid), "killed": bool(pane or pid)}
     if kind == "stop":
         lv = _live_index().get(it.get("live_sid") or "")
         pane = (lv or {}).get("pane") or it.get("live_pane"); pid = (lv or {}).get("pid")
-        if pane or pid: live.kill(pane, pid)
+        if pane or pid:
+            try: live.kill(pane, pid)
+            except Exception as e: return {"error": f"Could not end the session: {e}"}
         db.update_item(iid, live_pane=None, pending_seed=None)
         return {"item": db.get_item(iid), "killed": bool(pane or pid)}
     if kind == "open_terminal":

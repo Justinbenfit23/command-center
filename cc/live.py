@@ -258,11 +258,36 @@ def rename_pane(pane, title):
     if pane and title: _tmux("select-pane", "-t", pane, "-T", title[:60])
 
 
+def _alive(pid):
+    try: os.kill(int(pid), 0)
+    except OSError: return False
+    st = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)], capture_output=True, text=True).stdout.strip()
+    return bool(st) and not st.startswith("Z")   # a zombie is dead, just not reaped yet
+
+def _children(pid):
+    out = subprocess.run(["pgrep", "-P", str(pid)], capture_output=True, text=True).stdout.split()
+    return [int(c) for c in out if c.isdigit()]
+
+def _kill_tree(pid):
+    """SIGTERM the process and everything under it (the MCP servers), then SIGKILL whatever is still there.
+    Children first, so a claude that ignores the signal cannot leave a dozen orphaned MCP servers behind."""
+    kids = _children(pid)
+    for k in kids: _kill_tree(k)
+    for sig, grace in ((15, 2.0), (9, 0.5)):
+        if not _alive(pid): return
+        try: os.kill(int(pid), sig)
+        except OSError: return
+        end = time.time() + grace
+        while time.time() < end and _alive(pid): time.sleep(0.1)
+
 def kill(pane, pid=None):
-    """End a session: killing its pane ends claude and the MCP servers under it. A session that never had a
-    pane (started in a plain Terminal, not in the cc host) is ended by its pid instead."""
+    """End a session for real. Killing the tmux pane is the clean path (claude and its MCP servers hang up
+    together), but a pane id can be stale and a claude can survive the hangup, so the pid is always checked
+    afterwards and the whole tree is killed if it is still there. Errors never hide a survivor."""
     if pane: _tmux("kill-pane", "-t", pane)
-    elif pid:
-        try: os.kill(int(pid), 15)
-        except Exception: pass
+    if pid:
+        end = time.time() + 1.5
+        while time.time() < end and _alive(pid): time.sleep(0.1)
+        if _alive(pid): _kill_tree(pid)
     _cache["at"] = 0.0
+    if pid and _alive(pid): raise RuntimeError(f"session pid {pid} would not die")
