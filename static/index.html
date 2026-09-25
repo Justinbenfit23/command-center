@@ -8,6 +8,8 @@
 header{display:flex;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
 header h1{font-size:14px;margin:0 16px 0 0;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .tabs button{background:transparent;color:var(--muted);border:1px solid transparent;padding:6px 12px;border-radius:6px;cursor:pointer}.tabs button.on{border-color:var(--accent);color:var(--accent)}
+.tabs button .ub{margin-left:6px;font-size:11px;padding:1px 6px;border-radius:9px;border:1px solid var(--line);color:var(--muted)}.tabs button .ub.warning{color:var(--warn);border-color:var(--warn)}.tabs button .ub.critical,.tabs button .ub.exceeded{color:var(--bad);border-color:var(--bad)}
+.ubars{max-width:900px}.urow{display:grid;grid-template-columns:220px 1fr 90px;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}.urow .n{font-weight:500}.urow .r{color:var(--muted);font-size:12px;margin-top:2px}.utrack{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.utrack i{display:block;height:100%;background:var(--accent);border-radius:3px}.urow.warning .utrack i{background:var(--warn)}.urow.critical .utrack i,.urow.exceeded .utrack i{background:var(--bad)}.urow .p{text-align:right;font-variant-numeric:tabular-nums}.urow.warning .p{color:var(--warn)}.urow.critical .p,.urow.exceeded .p{color:var(--bad)}
 main{padding:16px 20px;max-width:none}
 h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
 .bar{display:flex;gap:8px;margin-bottom:10px}.bar input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:6px;font-size:14px}.bar input.note{flex:.8}
@@ -53,9 +55,13 @@ h2.fold{margin-top:8px;cursor:pointer;user-select:none}h2.fold:hover{color:var(-
 .note{white-space:pre-wrap;cursor:pointer}.note.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.note.clamp::after{content:''}
 .notebox{margin:0 0 10px;display:flex;flex-direction:column;gap:6px}.notebox textarea{width:100%;background:#0b0d13;border:1px solid var(--line);color:var(--text);padding:8px;border-radius:6px;font:13px/1.45 inherit;min-height:60px;resize:vertical}
 .sel{background:#0b0d13;color:var(--text);border:1px solid var(--line);border-radius:5px;font-size:12px;padding:3px 6px}
-.working{display:flex;gap:8px;align-items:center;color:var(--warn);font-size:12px;margin-top:6px}.working .st{margin:0}
+.epdrank{width:34px;background:#0b0d13;color:var(--text);border:1px solid var(--line);border-radius:5px;font-size:12px;padding:3px 4px;text-align:center}
+.working{display:flex;gap:8px;align-items:center;color:var(--warn);font-size:12px;margin-top:6px}.ask{border:1px solid var(--warn);border-radius:6px;padding:8px 10px;margin:8px 0;color:var(--warn);font-size:13px}.ask .q{color:var(--text);margin-top:6px}.ask ol{margin:2px 0 4px 18px;color:var(--text)}.ask pre{white-space:pre-wrap;color:var(--muted);font-size:11px;margin:6px 0 0}.working .st{margin:0}
 .imgs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.imgs img{height:54px;border-radius:4px;border:1px solid var(--line)}
 .chatin textarea.drop{border-color:var(--accent)}
+.body.drop{outline:2px dashed var(--accent);outline-offset:-4px;background:#12161f}
+.imgs .fchip.up{opacity:.55;font-style:italic}.imgs .fchip.bad{border-color:var(--bad);color:var(--bad)}
+.imgs .fchip{display:inline-block;font-size:11px;padding:2px 8px;border:1px solid var(--line,#333);border-radius:10px;margin:2px 4px 2px 0;cursor:pointer;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
 
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 6px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
 .newbox .pill input[type=checkbox]{appearance:none;-webkit-appearance:none;width:12px;height:12px;min-height:0;min-width:0;padding:0;margin:0;border-radius:50%;border:1px solid var(--muted);background:transparent;cursor:pointer;flex:none}.newbox .pill input[type=checkbox]:checked{background:var(--ok);border-color:var(--ok)}.newbox .pill input[type=checkbox]:focus{outline:none;box-shadow:0 0 0 2px rgba(122,162,247,.35)}.pill:has(input:checked){color:var(--text);border-color:var(--ok)}
@@ -73,17 +79,31 @@ h2.fold{margin-top:8px;cursor:pointer;user-select:none}h2.fold:hover{color:var(-
 .lift.light{color:var(--ok);border-color:var(--ok)}.lift.medium{color:var(--warn);border-color:var(--warn)}.lift.heavy{color:var(--bad);border-color:var(--bad)}
 .slots .asg{background:#0b0d13;border:1px solid var(--line);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px}
 .chatin{align-items:flex-start}.chatin button{align-self:flex-start;height:38px;min-width:76px;padding:0 14px;border-radius:6px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;justify-content:center}.chatin .stop{background:transparent;border:1px solid var(--line);color:var(--muted)}.chatin .stop:hover{color:var(--text);border-color:var(--muted)}
+.todos{margin:0 0 10px;border:1px solid var(--line);border-radius:6px;background:#0b0d13;padding:6px 8px}
+.todos .tdh{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 4px;display:flex;gap:8px;align-items:center}
+.td{display:flex;gap:8px;align-items:flex-start;padding:3px 2px;border-radius:4px}.td:hover{background:#151824}
+.td input[type=checkbox]{margin-top:3px;width:14px;height:14px;flex:none;cursor:pointer}
+.td .tdt{flex:1;min-width:0;cursor:text;white-space:pre-wrap;font-size:13px}.td.done .tdt{color:var(--muted);text-decoration:line-through;opacity:.7}
+.td .x{visibility:hidden;background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0 4px}.td:hover .x{visibility:visible}.td .x:hover{color:var(--bad)}
+.td input.tde{flex:1;background:transparent;border:0;border-bottom:1px dashed var(--accent);color:var(--text);font:inherit;font-size:13px;padding:0}
+.tdadd input{width:100%;background:transparent;border:0;border-top:1px dashed var(--line);color:var(--text);padding:6px 2px 2px;font:inherit;font-size:13px;margin-top:4px}.tdadd input:focus{outline:none;border-top-color:var(--accent)}
+.td .src{font-size:9px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 3px;margin-top:4px;flex:none}
+.row .todos{display:none}.row.todo .todos{display:block}.row.todo .chat,.row.todo .imgs,.row.todo .chatin{display:none}.row.todo .acts .tdbtn{color:var(--accent);border-color:var(--accent)}
+.row .todos{padding:8px 12px;margin:0}.row .todos .tdh{display:none}.row .td .tdt{font-size:14px;line-height:1.5}.row .td{padding:4px 4px}
+.slotfold{margin:0 0 10px;font-size:12px}.slotfold a{color:var(--muted)}.slotfold a:hover{color:var(--text);text-decoration:none}.slotfold i{font-style:normal;display:inline-block;width:10px}.slotfold .slots{margin-top:8px}.slotfold .notebox{margin-top:8px}
 </style></head><body>
-<header><h1>Command Center</h1><div class="tabs"><button class="on" onclick="tab('intake',this)">Intake</button><button onclick="tab('team',this)">Team</button><button onclick="tab('roadmap',this)">Roadmap</button></div></header>
+<header><h1>Command Center</h1><div class="tabs"><button class="on" onclick="tab('intake',this)">Intake</button><button onclick="tab('team',this)">Team</button><button onclick="tab('roadmap',this)">Roadmap</button><button onclick="tab('usage',this)" id="usagetab">Usage</button></div><span style="margin-left:auto"></span><button class="s" id="restartbtn" onclick="restartServer(this)" title="restart the command-center server (launchd brings it straight back). Claude sessions live in tmux and are not touched.">restart server</button></header><div id="down" style="display:none;background:var(--bad);color:#0b0d13;padding:8px 20px;font-weight:600">server is down — waiting for it to come back…</div>
 <main>
 <section id="intake">
   <div class="two"><div>
     <div class="newbox">
-      <input id="in" placeholder="Slack link or the ask…">
-      <textarea id="innote" placeholder="First note (optional). Say what you already think this is and what you want done — it becomes the opening message of the session." rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+      <input id="in" placeholder="Title — what this item is called">
+      <input id="inslack" placeholder="Slack link (thread permalink) — optional">
       <input id="ingran" placeholder="Granola link (or paste the notes) — optional">
+      <textarea id="innote" placeholder="First note (optional). Say what you already think this is and what you want done — it becomes the opening message of the session." rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
       <div class="newrow"><div style="display:flex;gap:10px;align-items:center"><label class="pill"><input type="checkbox" id="instart" checked><span>Start a Claude Code session</span></label><select id="inlift" class="lift" title="lift"><option value="">lift?</option><option value="light">light</option><option value="medium">medium</option><option value="heavy">heavy</option></select><select id="inmodel" class="sel"><option value="fable">Fable 5.1</option><option value="opus">Opus 5</option><option value="sonnet">Sonnet 5</option></select></div><button class="p" onclick="addItem()">New</button></div>
     </div>
+    <div class="muted" id="membar" title="live Claude sessions vs the cap (CC_MAX_LIVE), and what the Mac has left. Each session is ~1.9 GB: Claude itself plus the MCP servers it spawns."></div>
     <h2>Work items <span class="muted" id="citems"></span> <select id="sortby" class="sel" style="margin-left:10px" onchange="try{localStorage.setItem('cc.sort',this.value)}catch(e){};loadItems(true)"><option value="lift">lightest first</option><option value="added_desc">newest first</option><option value="added_asc">oldest first</option></select> <label class="muted" style="font-weight:400;margin-left:10px"><input type="checkbox" id="showtools" onchange="for(const id of openIds)loadChat(id)"> show tool calls</label></h2><div id="items"></div>
     <h2><a href="#" target="_self" onclick="toggleArch();return false">Archived</a> <span class="muted" id="carch"></span></h2><div id="arch" style="display:none"></div>
   </div><div class="divider" id="divider" title="drag to resize"></div><div>
@@ -91,6 +111,10 @@ h2.fold{margin-top:8px;cursor:pointer;user-select:none}h2.fold:hover{color:var(-
   </div></div>
 </section>
 <section id="team" style="display:none"><p class="muted">Commits per day from GitHub, tickets from Shipyard. Load = open tickets + this week's commits ÷ 5. <button class="s" onclick="loadTeam(true)">refresh GitHub</button></p><div id="teamcards">loading…</div></section>
+<section id="usage" style="display:none">
+  <p class="muted">Your Claude plan limits, the same numbers as the Usage panel in the Claude app. Refreshes every 5 minutes. <button class="s" onclick="loadUsage(true)">refresh</button> <span class="muted" id="usage_at"></span></p>
+  <div id="usagebars" class="ubars">loading…</div>
+</section>
 <section id="roadmap" style="display:none">
   <p class="muted">Big rocks at the top; every open Shipyard ticket on the team or on you hangs off one. <button class="s" onclick="mapRoad()">map unmapped with Claude</button></p>
   <div id="rocks"></div><h2>By engineer</h2><div class="eng" id="byeng"></div><h2>Graph</h2><div id="dag"></div>
@@ -98,13 +122,33 @@ h2.fold{margin-top:8px;cursor:pointer;user-select:none}h2.fold:hover{color:var(-
 </main>
 <script>
 mermaid.initialize({startOnLoad:false,theme:'dark',securityLevel:'loose'});
-const J=(u,o)=>fetch(u,o).then(r=>r.json());const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const J=(u,o)=>fetch(u,o).then(r=>{serverUp(true);return r.json()}).catch(e=>{if(e instanceof TypeError)serverUp(false);throw e});
+let downSince=0,downTimer=null;function serverUp(ok){const b=document.getElementById('down');if(!b)return;if(ok){if(downSince){downSince=0;clearInterval(downTimer);downTimer=null;location.reload()}b.style.display='none';return}
+ if(!downSince){downSince=Date.now();b.style.display='';downTimer=setInterval(()=>fetch('/api/mem',{cache:'no-store'}).then(r=>{if(r.ok)serverUp(true)}).catch(()=>{}),1000)}}
+async function restartServer(btn){const t=btn.textContent;btn.disabled=true;btn.textContent='restarting…';try{await post('/api/restart',{})}catch(e){}
+ const t0=Date.now();await new Promise(r=>setTimeout(r,800));while(Date.now()-t0<30000){try{const r=await fetch('/api/mem',{cache:'no-store'});if(r.ok){location.reload();return}}catch(e){}await new Promise(r=>setTimeout(r,500))}
+ btn.disabled=false;btn.textContent=t;alert('The server did not come back in 30s. In a terminal: cc restart, then cc log.')}
+const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const post=(u,b)=>J(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});const patch=(u,b)=>J(u,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
-function tab(n,b){document.querySelectorAll('main section').forEach(s=>s.style.display=s.id===n?'':'none');document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));if(n==='team')loadTeam();if(n==='roadmap')loadRoad()}
+function tab(n,b){document.querySelectorAll('main section').forEach(s=>s.style.display=s.id===n?'':'none');document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));if(n==='team')loadTeam();if(n==='roadmap')loadRoad();if(n==='usage')loadUsage()}
+async function loadUsage(force){const d=await J('/api/usage'+(force?'?refresh=1':''));const box=document.getElementById('usagebars');const tabb=document.getElementById('usagetab');
+ if(d.error){box.innerHTML='<div class="muted">'+esc(d.error)+'</div>';return}
+ document.getElementById('usage_at').textContent='as of '+d.fetched_at;
+ box.innerHTML=d.limits.map(l=>`<div class="urow ${esc(l.severity||'normal')}"><div><div class="n">${esc(l.name)}</div><div class="r">${l.resets?'Resets '+esc(l.resets.label)+(l.resets.in?' · in '+esc(l.resets.in):''):''}${l.scope_model?' · separate weekly limit for '+esc(l.scope_model):''}</div></div><div class="utrack"><i style="width:${Math.min(100,l.percent||0)}%"></i></div><div class="p">${l.percent==null?'–':l.percent+'% used'}</div></div>`).join('')
+  +(d.credits&&d.credits.enabled?`<div class="urow"><div><div class="n">Usage credits</div><div class="r">extra usage past the plan limit</div></div><div class="utrack"><i style="width:${Math.min(100,d.credits.utilization||0)}%"></i></div><div class="p">${d.credits.utilization==null?'–':d.credits.utilization+'%'}</div></div>`:'');
+ const worst=d.limits.reduce((a,l)=>(l.percent||0)>(a?a.percent||0:-1)?l:a,null);let b=tabb.querySelector('.ub');if(!b){b=document.createElement('span');b.className='ub';tabb.appendChild(b)}if(worst){b.className='ub '+(worst.severity||'normal');b.textContent=(worst.scope_model?worst.scope_model+' ':'')+worst.percent+'%'}}
+setInterval(()=>{if(!document.hidden)loadUsage(false)},300000);setTimeout(()=>loadUsage(false),1500);
+async function loadMem(){try{const m=await J('/api/mem');const el=document.getElementById('membar');if(!el)return;
+ const warn=m.live>=m.cap||(m.free_gb!=null&&m.free_gb<4);el.style.color=warn?'var(--warn)':'';
+ el.innerHTML=`<b>${m.live}</b> of ${m.cap} sessions live · ${m.free_gb!=null?m.free_gb+' GB free of '+m.total_gb:''}${m.swap_used_gb!=null?' · swap '+m.swap_used_gb+'/'+m.swap_total_gb+' GB':''}${m.tmux?'':' · <span style="color:var(--warn)">tmux is down</span>'} `
+  +(m.room>0?`<button class="s" onclick="resumeAll(this)" title="bring back the ${m.room} most recent stopped sessions (open items first)">resume ${m.room} stopped</button>`:'')}catch(e){}}
+async function resumeAll(btn){const t=btn.textContent;btn.disabled=true;btn.textContent='resuming…';try{const r=await post('/api/sessions/resume',{});
+ if(r.skipped&&r.skipped.length)alert(r.skipped.map(x=>x.title+': '+x.why).join('\n'));}finally{btn.disabled=false;btn.textContent=t}await loadItems(true);loadMem()}
+setInterval(()=>{if(!document.hidden)loadMem()},10000);setTimeout(loadMem,800);
 let openIds=new Set(),showArch=false;const liveOf={};
 const typing=()=>{const e=document.activeElement;return e&&(e.tagName==='TEXTAREA'||e.tagName==='INPUT')&&e.closest('.row')};
 const sortMode=()=>document.getElementById('sortby').value;
-async function loadItems(force){if(!force&&typing())return;const d=await J('/api/items?sort='+sortMode());d.forEach(t=>{liveOf[t.id]=t.live_sid||null});document.getElementById('citems').textContent=d.length;
+async function loadItems(force){if(!force&&typing())return;if(inflight.has('items')&&!force)return;inflight.add('items');let d;try{d=await J('/api/items?sort='+sortMode())}finally{inflight.delete('items')}d.forEach(t=>{liveOf[t.id]=t.live_sid||null});document.getElementById('citems').textContent=d.length;
  reconcile(document.getElementById('items'),d,'nothing open');
  if(showArch){const a=await J('/api/items?archived=1&sort='+sortMode());document.getElementById('carch').textContent=a.length;reconcile(document.getElementById('arch'),a,'')}}
 function reconcile(box,list,emptyText){const want=new Set(list.map(t=>t.id));
@@ -112,26 +156,29 @@ function reconcile(box,list,emptyText){const want=new Set(list.map(t=>t.id));
  const empty=box.querySelector(':scope > .empty');if(empty)empty.remove();
  let prev=null;
  for(const t of list){let r=box.querySelector(`:scope > .row[data-id="${t.id}"]`);
-  if(!r){r=document.createElement('div');r.className='row';r.id='r'+t.id;r.dataset.id=t.id;r.innerHTML=head(t)+body(t);if(openIds.has(t.id))r.classList.add('open')}
+  if(!r){r=document.createElement('div');r.className='row';r.id='r'+t.id;r.dataset.id=t.id;r.innerHTML=head(t)+body(t);if(openIds.has(t.id))r.classList.add('open');if(todoView.has(t.id))r.classList.add('todo')}
   r.classList.remove('light','medium','heavy');if(t.lift)r.classList.add(t.lift);
   else{const h=r.querySelector(':scope > .hd');const nh=head(t);if(!r.querySelector('.title-edit')&&h.dataset.sig!==sig(t)){const tmp=document.createElement('div');tmp.innerHTML=nh;h.replaceWith(tmp.firstElementChild)}
+   const tb=document.getElementById('td'+t.id);if(tb&&tb.dataset.sig!==tsig(t)&&!tb.contains(document.activeElement)&&!tb.querySelector('.tde'))tb.outerHTML=todosBox(t);
    const prevT=window._items&&window._items[t.id];window._items=window._items||{};window._items[t.id]=t;const sl=document.getElementById('sl'+t.id);const anyEdit=window._edit&&Object.keys(window._edit).some(k=>k.startsWith(t.id));if(sl&&!anyEdit&&!sl.contains(document.activeElement)&&(!prevT||sig(prevT)!==sig(t)))sl.outerHTML=slots(t)}
   if(prev){if(prev.nextElementSibling!==r)prev.after(r)}else if(box.firstElementChild!==r)box.prepend(r);prev=r}
  if(!list.length&&emptyText){const e=document.createElement('div');e.className='muted empty';e.textContent=emptyText;box.appendChild(e)}}
-const sig=t=>JSON.stringify([t.title,t.note,t.live&&t.live.status,t.requester,t.permalink,t.shipyard_key,t.prd_url,t.links,t.assignee,t.model,t.lift]);
+const sig=t=>JSON.stringify([t.title,t.note,t.granola,t.live&&t.live.status,t.requester,t.permalink,t.shipyard_key,t.prd_url,t.links,t.assignee,t.model,t.lift,t.todos?[t.todos.length,t.todos.filter(x=>x.done).length]:0]);
+const tsig=t=>JSON.stringify((t.todos||[]).map(x=>[x.id,x.text,x.done]));
 window._cfg={};const SY=()=>'https://'+(window._cfg.shipyard||'shipyard.local');
 function chips(t){return (t.links||[]).map(l=>`<a class="tag" href="${l.url}" target="_blank" title="${l.url}">${l.kind==='pr'?'PR '+l.url.split('/').slice(-3,-2)[0]+' #'+l.url.split('/').pop():l.kind==='radar'?'Radar':'Slack'}</a>`).join(' ')}
 function dot(t){const st=t.live?t.live.status:'none';return `<span class="st ${st}" title="${st}"></span>`}
 function head(t){const sh=t.shipyard_key?`<a href="${SY()}/t/${t.shipyard_key}" target="_blank"><b>${t.shipyard_key}</b></a>`:'<span class="muted">no ticket</span>';const prd=t.prd_url?`<a href="${t.prd_url}" target="_blank"><b>PRD</b></a>`:'<span class="muted">no PRD</span>';const sl=t.permalink?`<a href="${t.permalink}" target="_blank">slack</a>`:'';
- const live=t.live?`<span class="muted">${t.live.status}</span>`:'<span class="muted">not started</span>';
- return `<div class="hd" data-sig='${sig(t).replace(/'/g,"&#39;")}' onclick="toggle('${t.id}',event)"><input type="checkbox" onclick="event.stopPropagation();done('${t.id}')" title="done → archive">${dot(t)}
- <div class="ti"><b id="ttl${t.id}" onclick="event.stopPropagation();editTitle('${t.id}')" title="click to rename">${esc(t.title)}</b>${t.note?`<div class="note clamp" onclick="event.stopPropagation();this.classList.toggle('clamp')" title="click to expand">${esc(t.note)}</div>`:''}<div class="m">${live} ${t.requester?esc(t.requester):''} ${sl} · ${sh} · ${prd} ${chips(t)} ${t.assignee?'<span class="tag team">→ '+esc(t.assignee.split('_')[0])+'</span>':''}</div></div>
- <div class="acts" onclick="event.stopPropagation()">${t.live?'':`<button class="s" onclick="act('${t.id}','start',this)">Start Claude session</button>`}<button class="s" onclick="act('${t.id}','prd_live',this)">PRD</button><select class="lift ${t.lift||''}" title="lift — sorts lightest first" onchange="patch('/api/items/${t.id}',{lift:this.value}).then(()=>loadItems(true))"><option value="" ${!t.lift?'selected':''}>lift?</option><option value="light" ${t.lift==='light'?'selected':''}>light</option><option value="medium" ${t.lift==='medium'?'selected':''}>medium</option><option value="heavy" ${t.lift==='heavy'?'selected':''}>heavy</option></select><select class="sel" title="model for this session" onchange="post('/api/items/${t.id}/model',{model:this.value}).then(()=>loadItems(true))"><option value="fable" ${(t.model||'fable')==='fable'?'selected':''}>Fable 5.1</option><option value="opus" ${t.model==='opus'?'selected':''}>Opus 5</option><option value="sonnet" ${t.model==='sonnet'?'selected':''}>Sonnet 5</option></select><button class="s" onclick="act('${t.id}','team',this)">→ team</button><button class="s" onclick="act('${t.id}','dbr_done',this)">dbr done</button></div></div>`}
+ const live=t.live?`<span class="muted">${t.live.status}</span>`:(t.live_sid?'<span class="muted" title="the process is gone but the conversation is saved; Resume picks it up where it stopped">stopped · resumable</span>':'<span class="muted">not started</span>');
+ return `<div class="hd" data-sig='${sig(t).replace(/'/g,"&#39;")}' onclick="toggle('${t.id}',event)"><input type="checkbox" onclick="event.stopPropagation();done('${t.id}')" title="done → ends the Claude session and archives the item">${dot(t)}
+ <div class="ti"><b id="ttl${t.id}" onclick="event.stopPropagation();editTitle('${t.id}')" title="click to rename">${esc(t.title)}</b><div class="m">${live} ${t.requester?esc(t.requester):''} ${sl} · ${sh} · ${prd} ${chips(t)} ${t.assignee?'<span class="tag team">→ '+esc(t.assignee.split('_')[0])+'</span>':''}${t.todos&&t.todos.length?` · <a href="#" target="_self" title="open the to-do list" onclick="event.stopPropagation();gotoTodo('${t.id}');return false">☑ ${t.todos.filter(x=>x.done).length}/${t.todos.length}</a>`:''}</div></div>
+ <div class="acts" onclick="event.stopPropagation()">${t.live?`<button class="s" onclick="act('${t.id}','stop',this)" title="end the Claude session (frees ~1.5 GB); the item stays open and Resume brings it back">stop</button>`:`<button class="s" onclick="act('${t.id}','start',this)" title="${t.status!=='open'?'resumes the session and moves the item back to open':''}">${t.live_sid?(t.status!=='open'?'Resume + reopen':'Resume session'):'Start Claude session'}</button>`}<button class="s" onclick="act('${t.id}','prd_live',this)">PRD</button><select class="lift ${t.lift||''}" title="lift — sorts lightest first" onchange="patch('/api/items/${t.id}',{lift:this.value}).then(()=>loadItems(true))"><option value="" ${!t.lift?'selected':''}>lift?</option><option value="light" ${t.lift==='light'?'selected':''}>light</option><option value="medium" ${t.lift==='medium'?'selected':''}>medium</option><option value="heavy" ${t.lift==='heavy'?'selected':''}>heavy</option></select><select class="sel" title="model for this session" onchange="post('/api/items/${t.id}/model',{model:this.value}).then(()=>loadItems(true))"><option value="fable" ${(t.model||'fable')==='fable'?'selected':''}>Fable 5.1</option><option value="opus" ${t.model==='opus'?'selected':''}>Opus 5</option><option value="sonnet" ${t.model==='sonnet'?'selected':''}>Sonnet 5</option></select><button class="s" onclick="act('${t.id}','team',this)" title="hand off and walk away: reads the chat to pick who (Kevin, David, Rami, Colton), runs dbr done in the session, Slacks them the handoff, ends the session, archives the card">→ team</button><button class="s tdbtn" onclick="gotoTodo('${t.id}')" title="swap this card between its chat and its to-do list">${todoLabel(t,todoView.has(t.id))}</button></div></div>`}
 function slot(id,key,label,href,ph,xf){const v=window._items[id][key]||'';const editing=window._edit&&window._edit[id+key];
- if(v&&!editing){return `<label>${label}</label><a href="${href(v)}" title="${esc(v)}">${esc(key==='shipyard_key'?v:key==='prd_url'?(v.split('/d/')[1]?'Shipyard doc '+v.split('/d/')[1].slice(0,8):v):'thread')}</a><button class="s" onclick="editSlot('${id}','${key}')">edit</button>`}
+ if(v&&!editing){return `<label>${label}</label><a href="${href(v)}" title="${esc(v)}" ${/^https?:/.test(v)?'target="_blank"':'onclick="return false"'}>${esc(key==='shipyard_key'?v:key==='prd_url'?(v.split('/d/')[1]?'Shipyard doc '+v.split('/d/')[1].slice(0,8):v):key==='granola'?(/^https?:/.test(v)?'Granola notes':v.slice(0,90)+(v.length>90?'…':'')):'thread')}</a><button class="s" onclick="editSlot('${id}','${key}')">edit</button>`}
  return `<label>${label}</label><input id="s_${key}${id}" value="${esc(v)}" placeholder="${ph}" onkeydown="if(event.key==='Enter')saveSlot('${id}','${key}')"><button class="s" onclick="saveSlot('${id}','${key}')">save</button>`}
 function slots(t){window._items=window._items||{};window._items[t.id]=t;return `<div class="slots" id="sl${t.id}">
   ${slot(t.id,'permalink','Slack',v=>v,'paste the thread permalink')}
+  ${slot(t.id,'granola','Granola',v=>/^https?:/.test(v)?v:'#','Granola link, or paste the notes')}
   ${slot(t.id,'shipyard_key','Shipyard',v=>SY()+'/t/'+v,'ticket key…')}
   ${slot(t.id,'prd_url','PRD',v=>v,'ticket doc url…')}
   <label>Assignee</label><select id="s_assignee${t.id}" class="asg" onchange="patch('/api/items/${t.id}',{assignee:this.value}).then(r=>{window._items['${t.id}']=r;loadItems(true)})"><option value="">unassigned</option>${(window._roster||[]).map(o=>`<option value="${o.login}" ${t.assignee===o.login?'selected':''}>${esc(o.name)}</option>`).join('')}</select><span></span>
@@ -140,31 +187,82 @@ function editSlot(id,key){window._edit=window._edit||{};window._edit[id+key]=tru
 async function saveSlot(id,key){const i=document.getElementById('s_'+key+id);let v=i?i.value.trim():'';if(key==='shipyard_key')v=v.toUpperCase().replace(/^.*\/t\//,'');
  const r=await patch('/api/items/'+id,{[key]:v});if(r&&r.error){alert(r.error);return}if(window._edit)delete window._edit[id+key];window._items[id]=r;document.getElementById('sl'+id).outerHTML=slots(r);loadItems(true)}
 function body(t){const ta=(f,ph)=>`<textarea placeholder="${ph}" onblur="if(this.value!==(window._items['${t.id}'].${f}||''))patch('/api/items/${t.id}',{${f}:this.value}).then(()=>loadItems(true))">${esc(t[f]||'')}</textarea>`;
- return `<div class="body"><div class="notebox">${ta('note','first-look note + context — saved when you click away, and sent into the session if it is running')}<input placeholder="Granola link or notes — saved on blur" value="${esc(t.granola||'')}" onblur="if(this.value!==(window._items['${t.id}'].granola||''))patch('/api/items/${t.id}',{granola:this.value}).then(()=>loadItems(true))"></div>${slots(t)}${t.body?`<div class="muted" style="font-size:12px;margin-bottom:8px">${esc(t.body).slice(0,500)}</div>`:''}
- <div class="chat md" id="c${t.id}" data-fp=""><span class="muted">${t.live?'loading…':'no session yet — Start Claude session'}</span></div>
- <div class="imgs" id="im${t.id}"></div><div class="chatin"><textarea id="t${t.id}" placeholder="talk to this item's Claude session… (Enter sends, Shift+Enter newline, drop or paste screenshots)" onkeydown="keyd(event,'${t.id}')" ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')" ondrop="this.classList.remove('drop');dropImgs(event,'${t.id}')" onpaste="pasteImgs(event,'${t.id}')"></textarea><button class="p" onclick="chat('${t.id}')">Send</button><button class="s stop" onclick="stopTurn('${t.id}',this)" title="interrupt what this session is doing (Esc)">Stop</button></div></div>`}
+ return `<div class="body" ondragover="dragOn(event,'${t.id}')" ondragleave="dragOff(event,'${t.id}')" ondrop="dragOff(event,'${t.id}');dropImgs(event,'${t.id}')"><div class="slotfold"><a href="#" target="_self" onclick="toggleSlots('${t.id}',this);return false"><i>▸</i> Note · Slack · Granola · Shipyard · PRD · Assignee</a><div id="slw${t.id}" style="display:none"><div class="notebox">${ta('note','first-look note + context — saved when you click away, and sent into the session if it is running')}</div>${slots(t)}</div></div>${t.body?`<div class="muted" style="font-size:12px;margin-bottom:8px">${esc(t.body).slice(0,500)}</div>`:''}
+ ${todosBox(t)}<div class="chat md" id="c${t.id}" data-fp=""><span class="muted">${t.live?'loading…':(t.live_sid?'session stopped — Resume session':'no session yet — Start Claude session')}</span></div>
+ <div class="imgs" id="im${t.id}"></div><div class="chatin"><textarea id="t${t.id}" placeholder="talk to this item's Claude session… (Enter sends, Shift+Enter newline, Esc stops and brings your last message back to edit, drop or paste files)" onkeydown="keyd(event,'${t.id}')" ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')" ondrop="this.classList.remove('drop');dropImgs(event,'${t.id}')" onpaste="pasteImgs(event,'${t.id}')"></textarea><button class="p" onclick="chat('${t.id}')">Send</button><button class="s stop" onclick="stopTurn('${t.id}',this)" title="interrupt what this session is doing (Esc)">Stop</button></div></div>`}
 const pendingImgs={};
-async function stopTurn(id,btn){const t=btn.textContent;btn.textContent='…';const r=await post(`/api/items/${id}/interrupt`);if(r.error)alert(r.error);btn.textContent=t;setTimeout(()=>loadChat(id),1200)}
-async function addImg(id,file){const data=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file)});const r=await post(`/api/items/${id}/upload`,{name:file.name||'screenshot.png',data});if(!r.path)return;(pendingImgs[id]=pendingImgs[id]||[]).push({path:r.path,data});renderImgs(id)}
-function renderImgs(id){const box=document.getElementById('im'+id);if(!box)return;box.innerHTML=(pendingImgs[id]||[]).map((x,i)=>`<img src="${x.data}" title="${x.path}" onclick="pendingImgs['${id}'].splice(${i},1);renderImgs('${id}')">`).join('')}
-function dropImgs(e,id){e.preventDefault();for(const f of e.dataTransfer.files)if(f.type.startsWith('image/'))addImg(id,f)}
-function pasteImgs(e,id){for(const it of e.clipboardData.items)if(it.type.startsWith('image/')){e.preventDefault();addImg(id,it.getAsFile())}}
-function keyd(e,id){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();chat(id)}}
+const MAX_UPLOAD=25*1024*1024;   // the upload body is base64 inside JSON; past this both the browser and the server start to hurt
+// --- per-item to-do list: sessions can only add lines; here you check, edit, delete and add by hand.
+function todosBox(t){const L=t.todos||[];const done=L.filter(x=>x.done).length;
+ return `<div class="todos" id="td${t.id}" data-sig='${tsig(t).replace(/'/g,"&#39;")}'><div class="tdh">To-do${L.length?` <span class="muted" style="text-transform:none;letter-spacing:0">${done}/${L.length}</span>`:''}</div>
+ ${L.map(x=>`<div class="td ${x.done?'done':''}" data-tid="${x.id}"><input type="checkbox" ${x.done?'checked':''} onchange="todoDone('${t.id}','${x.id}',this.checked)" title="${x.done?'reopen':'done → strikethrough'}"><span class="tdt" onclick="todoEdit('${t.id}','${x.id}',this)" title="click to edit">${esc(x.text)}</span>${x.source&&x.source!=='me'?`<span class="src" title="added by ${esc(x.source)}">${esc(x.source==='claude'?'cc':x.source)}</span>`:''}<button class="x" onclick="todoDel('${t.id}','${x.id}')" title="delete">×</button></div>`).join('')}
+ <div class="tdadd"><input placeholder="add a step… (Enter)" onkeydown="if(event.key==='Enter'){todoAdd('${t.id}',this)}"></div></div>`}
+function todoSet(id,list){const t=window._items[id];if(t){t.todos=list}const tb=document.getElementById('td'+id);if(tb&&!tb.querySelector('.tde')){const inp=tb.querySelector('.tdadd input');const keep=inp&&document.activeElement===inp?inp.value:null;tb.outerHTML=todosBox(t||{id,todos:list});if(keep!==null){const n=document.querySelector('#td'+id+' .tdadd input');if(n){n.value=keep;n.focus()}}}}
+async function todoAdd(id,inp){const v=inp.value.trim();if(!v)return;inp.value='';const r=await post(`/api/items/${id}/todos`,{items:[v]});if(r.todos)todoSet(id,r.todos);const n=document.querySelector('#td'+id+' .tdadd input');if(n)n.focus()}
+async function todoDone(id,tid,done){const r=await patch(`/api/todos/${tid}`,{done});if(r&&r.id){const list=await J(`/api/items/${id}/todos`);todoSet(id,list)}}
+async function todoDel(id,tid){await fetch(`/api/todos/${tid}`,{method:'DELETE'});const list=await J(`/api/items/${id}/todos`);todoSet(id,list)}
+function todoEdit(id,tid,span){const cur=span.textContent;const i=document.createElement('input');i.className='tde';i.value=cur;span.replaceWith(i);i.focus();i.select();
+ const fin=async()=>{const v=i.value.trim();if(!v||v===cur){i.onblur=null;const list=await J(`/api/items/${id}/todos`);todoSet(id,list);return}await patch(`/api/todos/${tid}`,{text:v});const list=await J(`/api/items/${id}/todos`);todoSet(id,list)};
+ i.onblur=fin;i.onkeydown=e=>{if(e.key==='Enter'){i.onblur=null;fin()}if(e.key==='Escape'){i.onblur=null;i.value=cur;fin()}}}
+const todoView=new Set();
+function gotoTodo(id){const r=document.getElementById('r'+id);if(!r)return;const on=!r.classList.contains('todo');r.classList.toggle('todo',on);on?todoView.add(id):todoView.delete(id);
+ if(on){r.classList.add('open');openIds.add(id);const t=window._items&&window._items[id];const tb=document.getElementById('td'+id);if(tb&&t)tb.outerHTML=todosBox(t);const i=document.querySelector('#td'+id+' .tdadd input');if(i)i.focus({preventScroll:true})}else loadChat(id);
+ const b=r.querySelector('.acts .tdbtn');if(b)b.textContent=todoLabel(window._items&&window._items[id]||{},on)}
+function todoLabel(t,on){return on?'chat':'to-do'+(t.todos&&t.todos.length?' '+t.todos.filter(x=>!x.done).length:'')}
+function toggleSlots(id,a){const w=document.getElementById('slw'+id);const open=w.style.display==='none';w.style.display=open?'':'none';a.querySelector('i').textContent=open?'\u25be':'\u25b8'}
+const inflight=new Set();let chatTick=0;const chatStatus={};
+const lastSent={};
+async function stopTurn(id,btn){const t=btn?btn.textContent:'';if(btn)btn.textContent='…';const r=await post(`/api/items/${id}/interrupt`);if(r.error)alert(r.error);if(btn)btn.textContent=t;
+ // recall: the message you just sent comes back into the box to edit and resend, like Esc then Up in the terminal
+ const ta=document.getElementById('t'+id),ls=lastSent[id];if(ta&&ls&&!ta.value.trim()&&Date.now()-ls.at<10*60*1000){ta.value=ls.text;ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}
+ setTimeout(()=>loadChat(id),1200)}
+// A dropped file is uploaded to ~/.command-center/uploads/<item>/ and the session is given its PATH, so any file
+// type works — the session Reads it. The chip appears the moment you drop, and says so when an upload fails.
+async function addImg(id,file){const slot={name:file.name||'pasted',img:(file.type||'').startsWith('image/'),state:'up'};
+ (pendingImgs[id]=pendingImgs[id]||[]).push(slot);renderImgs(id);
+ if(file.size>MAX_UPLOAD){slot.state='bad';slot.name=`${slot.name} — too big (${Math.round(file.size/1048576)}MB, max 25MB)`;renderImgs(id);return}
+ try{const data=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=()=>rej(fr.error||new Error('could not read file'));fr.readAsDataURL(file)});
+  const r=await post(`/api/items/${id}/upload`,{name:file.name||'screenshot.png',data});
+  if(!r||!r.path)throw new Error((r&&r.error)||'upload failed');
+  Object.assign(slot,{path:r.path,data,state:'ok',name:file.name||r.path.split('/').pop()})}
+ catch(err){slot.state='bad';slot.name=`${slot.name} — ${String(err&&err.message||err).slice(0,60)}`}
+ renderImgs(id)}
+function renderImgs(id){const box=document.getElementById('im'+id);if(!box)return;box.innerHTML=(pendingImgs[id]||[]).map((x,i)=>{const rm=`pendingImgs['${id}'].splice(${i},1);renderImgs('${id}')`;
+ if(x.state==='ok'&&x.img)return `<img src="${x.data}" title="${x.path}" onclick="${rm}">`;
+ const cls=x.state==='ok'?'fchip':x.state==='up'?'fchip up':'fchip bad',icon=x.state==='ok'?'📎':x.state==='up'?'⏳':'⚠';
+ return `<span class="${cls}" title="${esc(x.path||x.name)} (click to remove)" onclick="${rm}">${icon} ${esc(x.name)}</span>`}).join('')}
+// Finder hands us dataTransfer.files; some sources (and paste) only populate .items.
+function filesOf(dt){if(!dt)return [];if(dt.files&&dt.files.length)return [...dt.files];
+ return [...(dt.items||[])].filter(i=>i.kind==='file').map(i=>i.getAsFile()).filter(Boolean)}
+const hasFiles=dt=>[...(dt&&dt.types||[])].includes('Files');
+function dropImgs(e,id){e.preventDefault();e.stopPropagation();for(const f of filesOf(e.dataTransfer))addImg(id,f)}
+function pasteImgs(e,id){const fs=filesOf(e.clipboardData);if(fs.length){e.preventDefault();for(const f of fs)addImg(id,f)}}
+// The whole open row is the drop target, not just the little text box — aiming at the box was the hard part.
+function dragOn(e,id){if(!hasFiles(e.dataTransfer))return;e.preventDefault();e.stopPropagation();e.dataTransfer.dropEffect='copy';bodyOf(id)&&bodyOf(id).classList.add('drop')}
+function dragOff(e,id){bodyOf(id)&&bodyOf(id).classList.remove('drop')}
+const bodyOf=id=>{const r=document.getElementById('r'+id);return r&&r.querySelector(':scope > .body')};
+// Without these, a file dropped even slightly off target makes Chrome leave the app and open the file itself.
+window.addEventListener('dragover',e=>{if(hasFiles(e.dataTransfer))e.preventDefault()});
+window.addEventListener('drop',e=>{if(hasFiles(e.dataTransfer))e.preventDefault()});
+function keyd(e,id){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();chat(id)}else if(e.key==='Escape'){e.preventDefault();stopTurn(id,document.querySelector('#r'+id+' .chatin .stop'))}}
 const val=id=>document.getElementById(id).value.trim();
 async function save(id,b){await patch('/api/items/'+id,b);loadItems(true)}
 function editTitle(id){const b=document.getElementById('ttl'+id);const cur=b.textContent;const i=document.createElement('input');i.className='title-edit';i.value=cur;b.replaceWith(i);i.focus();i.select();
  const fin=async()=>{const v=i.value.trim()||cur;await patch('/api/items/'+id,{title:v});loadItems(true)};i.onblur=fin;i.onkeydown=e=>{if(e.key==='Enter'){i.onblur=null;fin()}if(e.key==='Escape'){i.onblur=null;loadItems(true)}}}
 function toggle(id,e){if(e.target.tagName==='A'||e.target.tagName==='INPUT')return;const r=document.getElementById('r'+id);r.classList.toggle('open');if(r.classList.contains('open')){openIds.add(id);loadChat(id)}else openIds.delete(id)}
 function render(text){try{return marked.parse(text,{breaks:true})}catch(e){return esc(text)}}
-async function loadChat(id){const el=document.getElementById('c'+id);if(!el)return;const tools=document.getElementById('showtools').checked;const d=await J(`/api/items/${id}/messages${tools?'?tools=1':''}`);
- const st=document.querySelector('#r'+id+' .st');if(st&&d.status)st.className='st '+d.status;
- const fp=d.messages.length+':'+(d.messages.length?d.messages[d.messages.length-1].text.length:0)+':'+tools+':'+d.status+':'+(d.last_tool||'');if(el.dataset.fp===fp)return;el.dataset.fp=fp;
+async function loadChat(id){const el=document.getElementById('c'+id);if(!el||todoView.has(id))return;if(inflight.has('chat'+id))return;const tools=document.getElementById('showtools').checked;inflight.add('chat'+id);let d;try{d=await J(`/api/items/${id}/messages${tools?'?tools=1':''}`)}catch(e){return}finally{inflight.delete('chat'+id)}
+ const st=document.querySelector('#r'+id+' .st');if(st&&d.status)st.className='st '+d.status;chatStatus[id]=d.status;
+ chatQ[id]=d.question||null;const fp=d.messages.length+':'+(d.messages.length?d.messages[d.messages.length-1].text.length:0)+':'+tools+':'+d.status+':'+(d.question?JSON.stringify(d.question).length:0)+':'+(d.dialog?d.dialog.length:0);
+ if(el.dataset.fp===fp){const w=el.querySelector(':scope > .working');if(w&&d.status==='busy'){const want='working'+(d.last_tool?' — '+d.last_tool:'…');if(w.dataset.t!==want){w.dataset.t=want;w.innerHTML='<span class="st busy"></span> '+esc(want)}}return}el.dataset.fp=fp;
  const atBottom=el.scrollHeight-el.scrollTop-el.clientHeight<60;const top=el.scrollTop;
  el.innerHTML=(d.messages.map(m=>m.role==='user'?`<div class="u">▸ ${esc(m.text)}</div>`:`<div class="a">${render(m.text)}</div>`).join('')||`<span class="muted">${liveOf[id]?'waiting for the first reply…':'no session yet — Start Claude session'}</span>`)
+  +(d.question?`<div class="ask"><b>Claude is asking you</b> — answer in the terminal, chat messages sent now would answer it by accident. <button class="s" onclick="openTerm('${id}')">open terminal</button>`+d.question.map(q=>`<div class="q">${esc(q.q)}</div><ol>${(q.options||[]).map(o=>`<li>${esc(o)}</li>`).join('')}</ol>`).join('')+`</div>`:'')
+  +(d.dialog?`<div class="ask"><b>Waiting on you in the terminal</b> <button class="s" onclick="openTerm('${id}')">open terminal</button><pre>${esc(d.dialog)}</pre></div>`:'')
   +(d.status==='busy'?`<div class="working"><span class="st busy"></span> working${d.last_tool?' — '+esc(d.last_tool):'…'}</div>`:'');
  el.scrollTop=atBottom?el.scrollHeight:top}
 async function act(id,kind,btn){const r=document.getElementById('r'+id);r.classList.add('open');openIds.add(id);
- const label=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent=kind==='start'?'starting…':kind==='team'?'checking…':'sent'}
+ const label=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent=kind==='start'?'starting…':kind==='team'?'reading the chat…':'sent'}
  try{
   if(kind==='team')return await handoff(id,btn,label);
   const res=await post(`/api/items/${id}/${kind}`);if(res&&res.error)alert(res.error);
@@ -172,22 +270,23 @@ async function act(id,kind,btn){const r=document.getElementById('r'+id);r.classL
  finally{if(btn){btn.disabled=false;btn.textContent=label}}
  await loadItems(true);setTimeout(()=>loadChat(id),2000)}
 async function handoff(id,btn,label){
- const pre=await post(`/api/items/${id}/team`,{preview:true});
- if(pre.need_assignee){alert('Set the Assignee field on this card first.\n\n'+pre.options.map(o=>o.login+'  ('+o.name+')').join('\n'));
-  if(btn){btn.disabled=false;btn.textContent=label}const a=document.getElementById('s_assignee'+id);if(a){a.focus();a.scrollIntoView({block:'center'})}return}
- if(!confirm('Slack this to '+pre.to+'?\n\n'+pre.preview)){if(btn){btn.disabled=false;btn.textContent=label}return}
- if(btn)btn.textContent='sending…';
+ if(btn)btn.textContent='handing off…';
  const res=await post(`/api/items/${id}/team`,{});
- if(res.error)alert(res.error); else if(res.dm&&res.dm.error)alert('Assigned, but the DM failed: '+res.dm.error);
+ if(res.error){alert(res.error);if(btn){btn.disabled=false;btn.textContent=label}
+  if(res.need_assignee){const a=document.getElementById('s_assignee'+id);if(a){a.focus();a.scrollIntoView({block:'center'})}}return}
  openIds.delete(id);
  if(btn){btn.disabled=false;btn.textContent=label}
  await loadItems(true)}
-async function chat(id){const ta=document.getElementById('t'+id);const v=ta.value.trim();const imgs=(pendingImgs[id]||[]).map(x=>x.path);if(!v&&!imgs.length)return;ta.value='';pendingImgs[id]=[];renderImgs(id);const el=document.getElementById('c'+id);el.innerHTML+=`<div class="u">▸ ${esc(v)}${imgs.length?' <span class="muted">+'+imgs.length+' image'+(imgs.length>1?'s':'')+'</span>':''}</div><div class="working"><span class="st busy"></span> sending…</div>`;el.scrollTop=el.scrollHeight;await post(`/api/items/${id}/send`,{text:v,images:imgs});el.dataset.fp='';setTimeout(()=>loadChat(id),1500);ta.focus()}
+const chatQ={};async function openTerm(id){const sid=liveOf[id];if(!sid){alert('no live session');return}await post(`/api/live/${sid}/focus`,{})}
+async function chat(id){if(chatQ[id]){alert('Claude is asking you a question in the terminal. Answer it there first (open terminal), then send this.');return}const ta=document.getElementById('t'+id);const v=ta.value.trim();const L=pendingImgs[id]||[];if(L.some(x=>x.state==='up')){alert('still uploading — try again in a second');return}
+ const imgs=L.filter(x=>x.state==='ok'&&x.path).map(x=>x.path);if(!v&&!imgs.length)return;lastSent[id]={text:v,at:Date.now()};ta.value='';pendingImgs[id]=[];renderImgs(id);const el=document.getElementById('c'+id);el.innerHTML+=`<div class="u">▸ ${esc(v)}${imgs.length?' <span class="muted">+'+imgs.length+' file'+(imgs.length>1?'s':'')+'</span>':''}</div><div class="working"><span class="st busy"></span> sending…</div>`;el.scrollTop=el.scrollHeight;const r=await post(`/api/items/${id}/send`,{text:v,images:imgs});if(r&&r.error){ta.value=v;const w=el.querySelector(':scope > .working');if(w)w.remove();alert(r.error)}el.dataset.fp='';setTimeout(()=>loadChat(id),1500);ta.focus()}
 async function done(id){await post(`/api/items/${id}/done`);openIds.delete(id);loadItems(true)}
-async function addItem(){const i=document.getElementById('in'),n=document.getElementById('innote'),st=document.getElementById('instart');const v=i.value.trim();if(!v)return;
- const b=/slack\.com\/archives\//.test(v)?{link:v}:{text:v};b.note=n.value.trim();b.start=st.checked;b.model=document.getElementById('inmodel').value;b.granola=document.getElementById('ingran').value.trim();b.lift=document.getElementById('inlift').value;i.value='';n.value='';n.style.height='';document.getElementById('ingran').value='';i.placeholder=b.start?'starting a Claude Code session…':'adding…';
- const r=await post('/api/items',b);i.placeholder='Slack link or the ask…';if(r&&r.id){openIds.add(r.id)}await loadItems(true);if(r&&r.id)setTimeout(()=>loadChat(r.id),2500)}
-document.getElementById('in').addEventListener('keydown',e=>{if(e.key==='Enter')addItem()});document.getElementById('innote').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')addItem()});
+async function addItem(){const i=document.getElementById('in'),sl=document.getElementById('inslack'),n=document.getElementById('innote'),st=document.getElementById('instart');let v=i.value.trim(),link=sl.value.trim();
+ if(/slack\.com\/archives\//.test(v)&&!link){link=v;v=''}   // a permalink typed into the title box still counts as the Slack link
+ if(!v&&!link)return;
+ const b={text:v,link};b.note=n.value.trim();b.start=st.checked;b.model=document.getElementById('inmodel').value;b.granola=document.getElementById('ingran').value.trim();b.lift=document.getElementById('inlift').value;i.value='';sl.value='';n.value='';n.style.height='';document.getElementById('ingran').value='';i.placeholder=b.start?'starting a Claude Code session…':'adding…';
+ const r=await post('/api/items',b);i.placeholder='Title — what this item is called';if(r&&r.id){openIds.add(r.id)}await loadItems(true);if(r&&r.id)setTimeout(()=>loadChat(r.id),2500)}
+for(const id of ['in','inslack','ingran'])document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addItem()});document.getElementById('innote').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')addItem()});
 function toggleArch(){showArch=!showArch;document.getElementById('arch').style.display=showArch?'':'none';loadItems()}
 const PR_FAMILIES=[['DBT',r=>r==='dbt-snowflake'],['Snowflake',r=>/^snowflake/.test(r)],['Opp Generation',r=>r==='opp-generation'],['Pulse',r=>r==='pulse'],['Romwell / Twilight',r=>r==='twilight'||r==='romwell-skills'],['Other',r=>true]];
 async function loadMine(refresh){const d=await J('/api/prs/mine?enrich=1'+(refresh?'&refresh=1':''));const groups=PR_FAMILIES.map(([n,f])=>[n,[]]);
@@ -202,7 +301,27 @@ async function loadTeam(refresh){const g=document.getElementById('teamcards');if
  <div class="stats"><div><b>${m.today}</b><small>commits today</small></div><div><b>${m.week}</b><small>this week</small></div><div><b>${m.avg_per_workday}</b><small>avg per workday, 14d</small></div><div><b>${m.active_tickets}</b><small>active tickets</small></div><div><b>${m.backlog_tickets}</b><small>in backlog</small></div><div><b>${m.tickets_from_me.length}</b><small>from me</small></div></div>
  <div class="spark">${m.series.map(s=>`<i class="${['Sat','Sun'].includes(s.dow)?'we':''}" style="height:${Math.max(4,100*s.commits/max)}%" title="${s.day}: ${s.commits}"></i>`).join('')}</div><div class="dows">${m.series.map(s=>`<span>${s.dow[0]}</span>`).join('')}</div>
  <div class="muted" style="font-size:12px;margin:6px 0 10px">${m.repos.map(r=>r[0]+' '+r[1]).join(' · ')}${m.fetched_at?' · fetched '+m.fetched_at.slice(5,16).replace('T',' '):''}</div>
- ${tix('From me',m.tickets_from_me)}${tixOthers(m)}</div>`).join('')}
+ ${roadmapFor(m.login)}${tix('From me',m.tickets_from_me)}${tixOthers(m)}</div>`).join('');
+ loadEpd()}
+// --- EPD Rolling Roadmap. The same rows the team edits in the claude.ai artifact; a 15-minute sync keeps
+// the two honest. Edits here are instant locally and go up on the next cycle.
+let epdRows={},epdMeta={phases:[],delivery:[],artifact:'#'};
+function epdSlug(login){return (login||'').split('-')[0]}
+async function loadEpd(refresh){const d=await J('/api/epd'+(refresh?'?refresh=1':''));epdMeta=d;epdRows={};
+ (d.projects||[]).forEach(r=>{(epdRows[r.assignee]=epdRows[r.assignee]||[]).push(r)});
+ document.querySelectorAll('[data-epd]').forEach(el=>{el.innerHTML=epdTable(epdRows[el.dataset.epd]||[])})}
+function roadmapFor(login){const s=epdSlug(login);return `<h2 style="margin-top:8px">Roadmap <a class="muted" style="font-size:11px;font-weight:400" target="_blank" href="${epdMeta.artifact||'#'}">artifact</a></h2><div data-epd="${s}">${epdTable(epdRows[s]||[])}</div>`}
+function epdSel(k,f,val,opts){return `<select class="sel" onchange="epdSet('${k}','${f}',this.value)">${['',...opts].map(o=>`<option value="${o}" ${o===(val||'')?'selected':''}>${o||'—'}</option>`).join('')}</select>`}
+function epdTable(rs){if(!rs.length)return'<div class="muted" style="font-size:12px">no roadmap rows</div>';
+ return `<table><thead><tr><th>#</th><th>Project</th><th>Phase</th><th>Delivery</th><th>Progress</th><th>Team</th></tr></thead><tbody>${
+ rs.map(r=>`<tr><td><input class="epdrank" value="${r.rank||''}" title="top-three rank" onchange="epdSet('${r.task_key}','rank',this.value)"></td>
+ <td><a target="_blank" href="${r.link||'#'}">${r.task_key}</a> ${esc(r.title||'')}</td>
+ <td>${epdSel(r.task_key,'phase',r.phase,epdMeta.phases||[])}</td>
+ <td>${epdSel(r.task_key,'delivery',r.delivery,epdMeta.delivery||[])}</td>
+ <td><span class="prog"><i style="width:${r.progress||0}%"></i></span></td>
+ <td><input type="checkbox" ${r.team_view?'checked':''} title="show on the team view" onchange="epdSet('${r.task_key}','team_view',this.checked)"></td></tr>`).join('')}</tbody></table>`}
+async function epdSet(key,field,val){if(field==='rank')val=val===''?null:parseInt(val,10)||null;
+ await patch('/api/epd/'+key,{[field]:val});loadEpd()}
 function tixTable(ts){return `<table><thead><tr><th>Ticket</th><th>Status</th><th>Size</th><th>Progress</th></tr></thead><tbody>${ts.map(t=>`<tr><td><a target="_blank" href="${t.url||'#'}">${t.key}</a> ${esc(t.title)}</td><td>${esc(t.status)}</td><td>${t.complexity||''}</td><td><span class="prog"><i style="width:${t.progress||0}%"></i></span></td></tr>`).join('')}</tbody></table>`}
 function tix(label,ts){if(!ts.length)return'';return `<h2 style="margin-top:8px">${label} · ${ts.length}</h2>`+tixTable(ts)}
 // Work they picked up themselves is collapsed by default so a card reads as "what I handed this person".
@@ -222,8 +341,9 @@ async function mapRoad(){document.getElementById('rocks').innerHTML='<div class=
 try{const sv=localStorage.getItem('cc.sort');if(sv)document.getElementById('sortby').value=sv}catch(e){}
 try{const sv=localStorage.getItem('cc.sort');if(sv)document.getElementById('sortby').value=sv}catch(e){}
 J('/api/config').then(c=>{window._cfg=c;window._roster=c.roster;loadItems(true)});
-loadItems(true);loadMine();setInterval(()=>loadItems(false),30000);
-setInterval(()=>{for(const id of openIds)loadChat(id)},2500);
+loadItems(true);loadMine();setInterval(()=>{if(!document.hidden)loadItems(false)},30000);
+setInterval(()=>{if(document.hidden)return;chatTick++;for(const id of openIds){if(chatStatus[id]==='busy'||chatTick%4===0)loadChat(id)}},2500);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadItems(false);for(const id of openIds)loadChat(id)}});
 (function(){const d=document.getElementById('divider'),root=document.documentElement;try{const w=localStorage.getItem('cc.prw');if(w)root.style.setProperty('--prw',w+'px')}catch(e){}
  let drag=false;d.addEventListener('mousedown',e=>{drag=true;d.classList.add('on');e.preventDefault()});
  window.addEventListener('mousemove',e=>{if(!drag)return;const two=d.parentElement.getBoundingClientRect();const w=Math.max(260,Math.min(two.right-e.clientX,two.width-360));root.style.setProperty('--prw',w+'px')});

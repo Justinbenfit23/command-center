@@ -39,7 +39,9 @@ def seed_prompt(item):
               "titled from the ask, description carrying the requester, link, note and what is actually being asked; reply with its key "
               "on its own line as `Ticket: KEY-NNN`. (2) Then give a three-sentence read: what this is, what it would take "
               "(simple build / Snowflake model / opp-gen or Pulse PR / UI change / feature / analysis / Radar dashboard / quick answer), "
-              "and whether it is his or the team's. Do not start building.")
+              "and whether it is his or the team's. (3) Then go do the work the first-look note asks for. "
+              "Do not wait for approval: the note is the go-ahead. Stop and ask only if the work is destructive, "
+              "outward-facing, or the note is genuinely ambiguous about what he wants.")
 
 def send(item, text):
     """Run one turn. Returns assistant text. Persists both sides. Creates the session on first use."""
