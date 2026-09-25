@@ -427,7 +427,7 @@ def team_view(refresh=False):
         active = [t for t in mine + others if t.get("status") in ("todo", "in_progress", "in_review")]
         load = len(active) + c["week"] / 5
         handed = [{"key": (i.get("shipyard_key") or "—"), "title": i["title"][:90],
-                   "url": (f"https://{SHIPYARD_HOST}/t/" + i["shipyard_key"]) if i.get("shipyard_key") else (i.get("prd_url") or "#"),
+                   "url": i.get("prd_url") or ((f"https://{SHIPYARD_HOST}/t/" + i["shipyard_key"]) if i.get("shipyard_key") else "#"),
                    "status": "handed off", "complexity": {"light": "S", "medium": "M", "heavy": "L"}.get(i.get("lift") or "", ""),
                    "progress": 5, "prd_url": i.get("prd_url"), "at": i.get("updated_at")}
                   for i in db.list_items("all") if i.get("assignee") == login and i.get("owner") == "team"]

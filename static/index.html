@@ -320,14 +320,14 @@ function epdSel(k,f,val,opts){return `<select class="sel" onchange="epdSet('${k}
 function epdTable(rs){if(!rs.length)return'<div class="muted" style="font-size:12px">no roadmap rows</div>';
  return `<table><thead><tr><th>#</th><th>Project</th><th>Phase</th><th>Delivery</th><th>Progress</th><th>Team</th></tr></thead><tbody>${
  rs.map(r=>`<tr><td><input class="epdrank" value="${r.rank||''}" title="top-three rank" onchange="epdSet('${r.task_key}','rank',this.value)"></td>
- <td><a target="_blank" href="${r.link||'#'}">${r.task_key}</a> ${esc(r.title||'')}</td>
+ <td><a target="_blank" href="${r.link||'#'}" title="${r.link_kind==='prd'?'PRD':'no PRD yet — opens the ticket'}">${esc(r.title||'')}</a> <a class="muted" style="font-size:11px" target="_blank" href="${SY()}/t/${r.task_key}">${r.task_key}</a></td>
  <td>${epdSel(r.task_key,'phase',r.phase,epdMeta.phases||[])}</td>
  <td>${epdSel(r.task_key,'delivery',r.delivery,epdMeta.delivery||[])}</td>
  <td><span class="prog"><i style="width:${r.progress||0}%"></i></span></td>
  <td><input type="checkbox" ${r.team_view?'checked':''} title="show on the team view" onchange="epdSet('${r.task_key}','team_view',this.checked)"></td></tr>`).join('')}</tbody></table>`}
 async function epdSet(key,field,val){if(field==='rank')val=val===''?null:parseInt(val,10)||null;
  await patch('/api/epd/'+key,{[field]:val});loadEpd()}
-function tixTable(ts){return `<table><thead><tr><th>Ticket</th><th>Status</th><th>Size</th><th>Progress</th></tr></thead><tbody>${ts.map(t=>`<tr><td><a target="_blank" href="${t.url||'#'}">${t.key}</a> ${esc(t.title)}</td><td>${esc(t.status)}</td><td>${t.complexity||''}</td><td><span class="prog"><i style="width:${t.progress||0}%"></i></span></td></tr>`).join('')}</tbody></table>`}
+function tixTable(ts){return `<table><thead><tr><th>Ticket</th><th>Status</th><th>Size</th><th>Progress</th></tr></thead><tbody>${ts.map(t=>`<tr><td><a target="_blank" href="${t.url||'#'}" title="${t.prd_url?'PRD':'no PRD yet — opens the ticket'}">${esc(t.title)}</a> <a class="muted" style="font-size:11px" target="_blank" href="${t.ticket_url||t.url||'#'}">${t.key}</a></td><td>${esc(t.status)}</td><td>${t.complexity||''}</td><td><span class="prog"><i style="width:${t.progress||0}%"></i></span></td></tr>`).join('')}</tbody></table>`}
 function tix(label,ts){if(!ts.length)return'';return `<h2 style="margin-top:8px">${label} · ${ts.length}</h2>`+tixTable(ts)}
 // Work they picked up themselves is collapsed by default so a card reads as "what I handed this person".
 let teamOpen=new Set();try{teamOpen=new Set(JSON.parse(localStorage.getItem('cc.teamopen')||'[]'))}catch(e){}

@@ -55,6 +55,29 @@ def add_note(key, content): return call("add_task_note", task_id=key, content=co
 
 PROGRESS = {"backlog": 0, "todo": 10, "in_progress": 50, "in_review": 85, "done": 100}
 
+import re as _re
+_DOC = None
+_prd_cache = {}   # key -> (updated_at, prd_url)
+
+def prd_url(task):
+    """The PRD behind a task: metadata.plan (set by the PRD button / handoff), else the first Shipyard document
+    link in the description. One get_task per task, re-fetched only when the task's updated_at moves."""
+    global _DOC
+    key = task.get("key")
+    if not key: return None
+    hit = _prd_cache.get(key)
+    if hit and hit[0] == task.get("updated_at"): return hit[1]
+    try: full = call("get_task", task_id=key, include=[])
+    except Exception: return hit[1] if hit else None
+    if _DOC is None:
+        from .config import SHIPYARD_HOST
+        _DOC = _re.compile(rf"https://{_re.escape(SHIPYARD_HOST)}/d/[0-9a-f-]{{36}}")
+    url = ((full.get("metadata") or {}).get("plan") or "").strip() or None
+    if not url:
+        m = _DOC.search(full.get("description") or ""); url = m.group(0) if m else None
+    _prd_cache[key] = (task.get("updated_at"), url)
+    return url
+
 def enrich(task):
     """Complexity + progress from what the list row carries; description length needs a get_task so it is optional."""
     p = task.get("priority") or "medium"
@@ -62,4 +85,7 @@ def enrich(task):
     desc = len(task.get("description") or "")
     size = "S" if base == 1 and desc < 800 else "L" if base == 3 or desc > 2500 else "M"
     task["complexity"] = size; task["progress"] = PROGRESS.get(task.get("status"), 0)
+    # We work at the PRD level: the row's link is the PRD when the task has one, the ticket only as a fallback.
+    task["prd_url"] = prd_url(task); task["ticket_url"] = task.get("url")
+    task["url"] = task["prd_url"] or task.get("url")
     return task

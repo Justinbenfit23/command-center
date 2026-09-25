@@ -42,7 +42,8 @@ def refresh_from_shipyard():
             if not key or key in seen: continue
             seen.append(key)
             cur = db.roadmap_row(key)
-            fields = {"title": t.get("title"), "link": _link(key), "link_kind": "ticket",
+            prd = shipyard.prd_url(t)
+            fields = {"title": t.get("title"), "link": prd or _link(key), "link_kind": "prd" if prd else "ticket",
                       "assignee": SLUG_BY_UID[uid], "tickets": [key]}
             if not cur:
                 fields |= {"phase": PHASE_BY_STATUS.get(t.get("status")), "delivery": "Not Started",
