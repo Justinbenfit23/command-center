@@ -37,6 +37,10 @@ def items_with_live(status="open", sort="lift"):
         it["todos"] = tds.get(it["id"], [])
         x = idx.get(it.get("live_sid")) if it.get("live_sid") else None
         it["live"] = {"status": x["status"], "pane": x["pane"], "kind": x["kind"]} if x else ({"status": "booting", "pane": it["live_pane"], "kind": "interactive"} if it.get("live_pane") and it.get("pending_seed") else None)
+        # Cursor-bridge items have no tmux session; their status comes from the bridge filesystem
+        if not it["live"] and it.get("model") == "cursor":
+            cbs = cb.get_status(it["id"])
+            it["live"] = {"status": cbs["status"], "pane": None, "kind": "cursor"}
         if x and x.get("title") and it.get("source_type") == "live" and it["title"] in (x.get("name"), "Claude session"): 
             db.update_item(it["id"], title=x["title"]); it["title"] = x["title"]
     return items
@@ -47,7 +51,10 @@ def items_with_live_one(iid):
     it["todos"] = db.todos(iid)
     return it
 
-MODELS = {"fable": "claude-fable-5-1", "opus": "claude-opus-5", "sonnet": "claude-sonnet-5"}
+MODELS = {"fable": "claude-fable-5-1", "opus": "claude-opus-5", "sonnet": "claude-sonnet-5", "cursor": "cursor"}
+# cursor-model items bypass tmux entirely: messages flow through cc/cursor_bridge.py's filesystem bridge,
+# picked up by a Cursor IDE polling loop. This uses Cursor credits, not Claude Code credits.
+from cc import cursor_bridge as cb
 # How many interactive sessions may run at once. Measured 2026-09-24: ~1.9 GB each (Claude ~0.55 GB + the MCP
 # servers every session spawns ~1.35 GB). 37 at once was ~70 GB on a 32 GB machine and took the tmux server
 # down with the Terminal. Ten is ~19 GB, which leaves room for Chrome and Slack.
@@ -95,10 +102,12 @@ def seed_for_live(item):
            f"This is Shipyard {item['shipyard_key']}. Read it, then give me a three-sentence read on where it stands and the next step, "
            "then go do that next step. Do not wait for me to approve it: the ticket is the go-ahead. "
            "Stop and ask only if the work is destructive, outward-facing, or genuinely ambiguous.")
-    return (TODO_HOWTO + "Intake item from my command center. Everything I have is in this JSON; treat `first_look_note` as my instructions and context, "
+    files = attach_block(item.get("attachments"))
+    return (TODO_HOWTO + (files + "\n\n" if files else "") + "Intake item from my command center. Everything I have is in this JSON; treat `first_look_note` as my instructions and context, "
             "`granola` as meeting notes: if it is a notes.granola.ai link, OPEN IT FIRST with the Chrome browser tools (tabs_context_mcp, navigate, then get_page_text; the page renders client-side and needs my logged-in Chrome) and treat the page text as the notes; if it is pasted text, it already is the notes. "
             "`slack_context` is the conversation that led up to the linked message "
-            "(`before` = the prior 24h in that channel/DM, `thread` = the linked thread). Read it before you answer.\n\n```json\n" + json.dumps(ctx, indent=2, ensure_ascii=False) + "\n```\n\n" + ask)
+            "(`before` = the prior 24h in that channel/DM, `thread` = the linked thread). Read it before you answer."
+            + (" Any file listed above was dropped on this item by me: open it before you answer." if files else "") + "\n\n```json\n" + json.dumps(ctx, indent=2, ensure_ascii=False) + "\n```\n\n" + ask)
 
 TODO_HOWTO = ("This item has a to-do list in my command center. It is MINE: do NOT push checklists, plans or steps to it on your own. "
               "Add a line ONLY when I explicitly ask (\"add that to my to-do\", \"put it on the list\"), and then only the lines I asked for, with:\n"
@@ -110,7 +119,17 @@ TODO_HOWTO = ("This item has a to-do list in my command center. It is MINE: do N
 def ensure_live(item, seed=None, force=False):
     """Start a real tmux Claude session for this item if it has none. Returns the live dict.
     If claude is still booting when we give up waiting, the pane and seed are parked on the item and
-    the watcher thread sends the seed the moment the session registers."""
+    the watcher thread sends the seed the moment the session registers.
+    Cursor-model items skip tmux entirely and write through the bridge."""
+    if item.get("model") == "cursor":
+        text = seed if seed is not None else seed_for_live(item)
+        meta = {k: item.get(k) for k in ("id", "title", "note", "body", "requester", "channel", "permalink",
+                "shipyard_key", "prd_url", "granola", "vip_tier", "model") if item.get(k)}
+        if text:
+            cb.send(item["id"], text, meta=meta)
+        else:
+            cb.write_meta(item["id"], meta)
+        return {"sid": None, "pane": None, "status": "idle", "kind": "cursor"}
     if item.get("live_sid") and item["live_sid"] in _live_index(): return _live_index()[item["live_sid"]]
     if item.get("live_pane") and item.get("pending_seed"): return {"sid": None, "pane": item["live_pane"], "status": "booting"}
     _cap_check(force)
@@ -299,6 +318,42 @@ def team_loads():
         out[login] = n + c["week"] / 5
     return out
 
+UPLOADS = os.path.expanduser("~/.command-center/uploads")
+DRAFT = "_draft"   # files dropped on the New box, before the item they belong to exists
+
+def save_upload(iid, name, data):
+    """Write a dropped file under ~/.command-center/uploads/<item>/ and hand back its absolute path.
+    The session is given the PATH, never the bytes, so any file type works: it just Reads it."""
+    import base64, re as _re
+    name = _re.sub(r"[^\w.-]", "_", name or "file.bin")[:80]
+    d = os.path.join(UPLOADS, _re.sub(r"[^\w.-]", "_", iid or DRAFT)); os.makedirs(d, exist_ok=True)
+    path = os.path.join(d, time.strftime("%Y%m%d-%H%M%S-") + name)
+    open(path, "wb").write(base64.b64decode((data or "").split(",")[-1]))
+    return path
+
+def claim_uploads(iid, paths):
+    """Move files dropped on the New box out of the shared _draft folder into the item's own, so an
+    item's attachments stay with it and the draft folder never becomes a junk drawer. Anything already
+    filed under an item (or living anywhere else) is left where it is."""
+    out = []
+    for p in paths or []:
+        if not isinstance(p, str) or not os.path.isfile(p): continue
+        if os.path.dirname(p) == os.path.join(UPLOADS, DRAFT):
+            d = os.path.join(UPLOADS, iid); os.makedirs(d, exist_ok=True)
+            dest = os.path.join(d, os.path.basename(p))
+            try: os.replace(p, dest); p = dest
+            except OSError: pass
+        out.append(p)
+    return out
+
+def attach_block(paths):
+    """The same shape a dropped file takes in a chat message, so Claude Code attaches images and Reads
+    the rest. One per line under a label; nothing else recognises them."""
+    paths = [p for p in paths or [] if os.path.isfile(p)]
+    if not paths: return ""
+    label = "Attached file:" if len(paths) == 1 else f"Attached {len(paths)} files:"
+    return label + "\n" + "\n".join(paths)
+
 def create_item(body):
     link = (body.get("link") or "").strip(); text = (body.get("text") or "").strip(); note = (body.get("note") or "").strip()
     meta = (slack.fetch(link) if link else {}) or {}
@@ -313,6 +368,8 @@ def create_item(body):
         try: item["slack_context"] = json.dumps(slack.context(link, hours=int(body.get("hours") or 24)), ensure_ascii=False)
         except Exception as e: item["slack_context"] = json.dumps({"error": str(e)[:200]})
     iid = db.insert_item(**item); triage.receipt(item["title"], sc["scores"], sc["band"], iid)
+    files = claim_uploads(iid, body.get("images") or body.get("attachments"))
+    if files: db.update_item(iid, attachments=json.dumps(files))
     ev = _intake_pg(item, meta)
     if ev: db.update_item(iid, intake_event_id=ev)
     if body.get("start"):
@@ -328,21 +385,43 @@ def action(iid, kind, body):
         if it.get("status") in db.ARCHIVED: db.update_item(iid, status="open", archived_at=None)   # resuming an archived item reopens it
         return {"live": lv, "item": db.get_item(iid)}
     if kind == "send":
+        if it.get("model") == "cursor":
+            text = body.get("text", "")
+            paths = [p for p in (body.get("images") or []) if os.path.isfile(p)]
+            if paths:
+                label = "Attached file:" if len(paths) == 1 else f"Attached {len(paths)} files:"
+                text = (text + "\n\n" if text else "") + label + "\n" + "\n".join(paths)
+            meta = {k: it.get(k) for k in ("id", "title", "note", "shipyard_key", "prd_url", "model") if it.get(k)}
+            cb.send(it["id"], text, meta=meta)
+            return {"ok": True}
         lv = ensure_live(it); text = body.get("text", "")
         if lv.get("sid") and live.pending_question(lv["sid"]):
-            return {"error": "Claude is asking you a question in the terminal. Answer it there first (Open terminal), then send this."}
+            return {"error": "Claude is asking you a question. Answer it in the question box above \u2014 a message sent now would be read as the answer."}
         paths = [p for p in (body.get("images") or []) if os.path.isfile(p)]
         if paths:   # dropped files reach the session as paths on their own lines, which it Reads
             label = "Attached file:" if len(paths) == 1 else f"Attached {len(paths)} files:"
             text = (text + "\n\n" if text else "") + label + "\n" + "\n".join(paths)
         live.send(lv["pane"], text); return {"ok": True}
     if kind == "upload":
-        import base64, re as _re
-        name = _re.sub(r"[^\w.-]", "_", body.get("name") or "file.bin")[:80]
-        d = os.path.join(os.path.expanduser("~/.command-center/uploads"), iid); os.makedirs(d, exist_ok=True)
-        path = os.path.join(d, time.strftime("%Y%m%d-%H%M%S-") + name)
-        open(path, "wb").write(base64.b64decode((body.get("data") or "").split(",")[-1]))
-        return {"path": path}
+        return {"path": save_upload(iid, body.get("name"), body.get("data"))}
+    if kind in ("answer", "keys"):
+        # Drive the terminal modal from the chat. The pane is the only truth about what is on screen, so
+        # everything here reads it back before and after it touches anything.
+        lv = _live_index().get(it.get("live_sid") or "") or {}
+        pane = lv.get("pane") or it.get("live_pane")
+        if not pane: return {"error": "this item has no live session"}
+        if kind == "answer":
+            n = body.get("choice")
+            if isinstance(n, int):
+                try: return {**live.answer(pane, n), "screen": live.visible(pane)}
+                except Exception as e: return {"error": str(e)[:300], "screen": live.visible(pane), "options": live.options(pane)}
+            txt = (body.get("text") or "").strip()
+            if not txt: return {"error": "nothing to answer with"}
+            live.type_text(pane, txt); time.sleep(0.3); live.key(pane, "enter")
+            time.sleep(0.5); return {"ok": True, "typed": txt, "screen": live.visible(pane)}
+        try: k = live.key(pane, body.get("key"))
+        except Exception as e: return {"error": str(e)[:200]}
+        time.sleep(0.25); return {"ok": True, "key": k, "screen": live.visible(pane), "options": live.options(pane)}
     if kind == "prd_live":
         lv = ensure_live(it)
         live.send(lv["pane"], "/prd-authoring " + it["title"] + (f" (Shipyard {it['shipyard_key']})" if it.get("shipyard_key") else "")
@@ -350,11 +429,18 @@ def action(iid, kind, body):
         return {"ok": True}
     if kind == "model":
         m = MODELS.get(body.get("model") or "", body.get("model")); db.update_item(iid, model=body.get("model"))
+        if body.get("model") == "cursor":
+            # Switching to cursor: no tmux command, just update the model. Any existing tmux session stays
+            # (the user can stop it separately) but new sends will route through the bridge.
+            return {"ok": True, "model": m, "sent": False}
         lv = _live_index().get(it.get("live_sid") or "")
         if lv and m:
             live.send(lv["pane"], f"/model {m}"); time.sleep(1.5); live.press(lv["pane"], "Enter")   # confirms "Switch model?"
         return {"ok": True, "model": m, "sent": bool(lv)}
     if kind == "interrupt":
+        if it.get("model") == "cursor":
+            cb.set_status(it["id"], "idle")
+            return {"ok": True}
         lv = _live_index().get(it.get("live_sid") or "")
         if not lv: return {"error": "no live session"}
         live.press(lv["pane"], "Escape")
@@ -393,6 +479,10 @@ def action(iid, kind, body):
     if kind == "done":
         # Done means done: the session is ended, not left running behind the archive. Its transcript
         # stays on disk, so Resume on the archived row brings it back if it is ever needed.
+        if it.get("model") == "cursor":
+            cb.set_status(it["id"], "idle")
+            db.update_item(iid, status="archived", archived_at=db.now())
+            return {"item": db.get_item(iid), "killed": False}
         lv = _live_index().get(it.get("live_sid") or "")
         pane = (lv or {}).get("pane") or it.get("live_pane"); pid = (lv or {}).get("pid")
         if pane or pid:
@@ -401,6 +491,17 @@ def action(iid, kind, body):
         db.update_item(iid, status="archived", archived_at=db.now(), live_pane=None, pending_seed=None)
         return {"item": db.get_item(iid), "killed": bool(pane or pid)}
     if kind == "stop":
+        if it.get("model") == "cursor":
+            cb.set_status(it["id"], "idle")
+            # A session started on a Claude model and later switched to cursor still has a tmux pane. Kill it.
+            lv = _live_index().get(it.get("live_sid") or "")
+            pane = (lv or {}).get("pane") or it.get("live_pane"); pid = (lv or {}).get("pid")
+            killed = False
+            if pane or pid:
+                try: live.kill(pane, pid); killed = True
+                except Exception: pass
+                db.update_item(iid, live_pane=None, pending_seed=None)
+            return {"item": db.get_item(iid), "killed": killed}
         lv = _live_index().get(it.get("live_sid") or "")
         pane = (lv or {}).get("pane") or it.get("live_pane"); pid = (lv or {}).get("pid")
         if pane or pid:
@@ -412,7 +513,33 @@ def action(iid, kind, body):
         return {"cmd": sessions.open_in_terminal(it["claude_session_id"], None)} if it.get("claude_session_id") else {"error": "no session yet"}
     return {"error": "unknown action"}
 
+_SYNC = {"at": 0.0, "running": False, "last": None}
+SYNC_MIN_GAP = 90          # opening the team tab twice in a minute should not run it twice
+
+def sync_epd(force=False):
+    """Bring every owner's Shipyard work onto the EPD Rolling Roadmaps board. Fires when the team tab is opened.
+
+    The board is the Shipyard HTML doc (GTMP-1181) and roadmap.py is the only writer, so this is a plain
+    subprocess: `sync --owner` per person, one `push`. Deterministic, no Claude, nothing left running.
+    Single-flight and rate-limited, so mashing the tab costs one run."""
+    now = time.time()
+    if _SYNC["running"] or (not force and now - _SYNC["at"] < SYNC_MIN_GAP): return _SYNC["last"]
+    _SYNC["running"] = True; _SYNC["at"] = now
+    try:
+        out = epd.sync_all()[-400:]
+        _SYNC["last"] = {"at": db.now(), "out": out}
+        print(f"epd sync: {out[:200]}", file=sys.stderr, flush=True)
+    except Exception as e:
+        _SYNC["last"] = {"at": db.now(), "out": f"failed: {str(e)[:200]}"}
+        print(f"epd sync failed: {e}", file=sys.stderr, flush=True)
+    finally:
+        _SYNC["running"] = False
+    return _SYNC["last"]
+
 def team_view(refresh=False):
+    # Opening the team tab is the trigger: kick the reconcile off in the background and serve the
+    # cards immediately. The rows the user sees are this run's inputs; the next open shows its output.
+    threading.Thread(target=sync_epd, daemon=True).start()
     if refresh: github.refresh_team()
     out = []
     for login, (name, uid, _slack) in TEAM.items():
@@ -469,14 +596,30 @@ class H(BaseHTTPRequestHandler):
                 return self._send(200, {"messages": msgs, "screen": live.screen(s_.get("pane")) if "screen" in qs else None, "status": s_.get("status")})
             if len(seg) == 4 and seg[:2] == ["api", "items"] and seg[3] == "messages":
                 it = db.get_item(seg[2]) or {}
+                if it.get("model") == "cursor":
+                    msgs = cb.transcript(it["id"], limit=40)
+                    cbs = cb.get_status(it["id"])
+                    return self._send(200, {"messages": msgs, "status": cbs.get("status", "idle"),
+                                            "last_tool": cbs.get("last_tool"), "question": None, "dialog": None})
                 if it.get("live_sid"):
                     msgs = live.transcript(it["live_sid"], limit=40, include_tools="tools" in qs)
                     cs.pin_links(it, "\n".join(m["text"] for m in msgs if m["role"] == "assistant"))
                     lv = _live_index().get(it["live_sid"])
                     q = live.pending_question(it["live_sid"]) if lv else None
+                    pane = lv.get("pane") if lv else None
+                    # The transcript says a question was ASKED; the screen says what you can press. Both go
+                    # down, so the chat can render real buttons instead of telling you to open a terminal.
+                    opts = live.options(pane) if (pane and (q or lv["status"] != "busy")) else []
                     return self._send(200, {"messages": msgs, "status": lv["status"] if lv else "gone", "last_tool": live.last_tool(it["live_sid"]) if lv and lv["status"] == "busy" else None,
-                                            "question": q, "dialog": None if (q or not lv) else live.dialog(lv.get("pane"))})
+                                            "question": q, "dialog": None if (q or not lv) else live.dialog(pane),
+                                            "options": opts, "tabs": live.tabs(pane) if opts else None})
                 return self._send(200, {"messages": [{"role": m["role"], "text": m["content"]} for m in db.messages(seg[2])], "status": None})
+            if len(seg) == 4 and seg[:2] == ["api", "items"] and seg[3] == "screen":
+                it = db.get_item(seg[2]) or {}
+                lv = _live_index().get(it.get("live_sid") or "") or {}
+                pane = lv.get("pane") or it.get("live_pane")
+                if not pane: return self._send(200, {"screen": "", "error": "no live session"})
+                return self._send(200, {"screen": live.visible(pane), "options": live.options(pane), "status": lv.get("status")})
             if len(seg) == 4 and seg[:2] == ["api", "items"] and seg[3] == "todos": return self._send(200, db.todos(seg[2]))
             if path == "/api/todos/push":
                 it = db.item_by_key_or_sid(key=(qs.get("key") or [None])[0], sid=(qs.get("sid") or [None])[0])
@@ -493,24 +636,25 @@ class H(BaseHTTPRequestHandler):
             if path == "/api/roadmap": return self._send(200, roadmap.view(auto_map="map" in qs))
             if path == "/api/epd":
                 if "refresh" in qs:
-                    try: epd.refresh_from_shipyard()
-                    except Exception as e: print(f"epd refresh failed: {e}", file=sys.stderr, flush=True)
+                    try: epd.pull()
+                    except Exception as e: print(f"epd pull failed: {e}", file=sys.stderr, flush=True)
                 return self._send(200, {"projects": epd.rows(team_view_only="team" in qs),
                                         "top_three": epd.top_three(), "phases": epd.PHASES,
-                                        "delivery": epd.DELIVERY, "artifact": EPD_ARTIFACT_URL})
-            # what the 15-minute sync reads to learn what this side believes
-            if path == "/api/epd/export": return self._send(200, epd.export())
+                                        "delivery": epd.DELIVERY, "artifact": EPD_ARTIFACT_URL,
+                                        "board": EPD_ARTIFACT_URL, "revision": epd.board().get("revision")})
+            if path == "/api/epd/sync":
+                if "now" in qs: return self._send(200, sync_epd(force=True) or {"ok": True})
+                return self._send(200, {"running": _SYNC["running"], "last": _SYNC["last"]})
             return self._send(404, {"error": "not found"})
         except Exception as e:
             return self._send(500, {"error": str(e)[:400]})
     def do_POST(self):
         path = urllib.parse.urlparse(self.path).path; body = self._body(); seg = path.strip("/").split("/")
         try:
-            # the sync hands back the artifact's rows; we reconcile and tell it what to write up there
-            if path == "/api/epd/merge": return self._send(200, epd.merge_remote(body.get("projects") or {}))
-            if path == "/api/epd/synced":
-                for k, at in (body.get("synced") or {}).items(): db.roadmap_mark_synced(k, at)
-                return self._send(200, {"ok": True, "marked": len(body.get("synced") or {})})
+            if path == "/api/uploads":
+                # Dropped on the New box, before the item exists. Lands in the shared _draft folder and is
+                # moved into the item's own folder by create_item.
+                return self._send(201, {"path": save_upload(DRAFT, body.get("name"), body.get("data"))})
             if path == "/api/items": return self._send(201, create_item(body))
             if path == "/api/sessions/resume":
                 sids = [body["sid"]] if body.get("sid") else (body.get("sids") or None)
@@ -573,7 +717,9 @@ class H(BaseHTTPRequestHandler):
         path = urllib.parse.urlparse(self.path).path; body = self._body(); seg = path.strip("/").split("/")
         try:
             if len(seg) == 3 and seg[:2] == ["api", "epd"]:
-                return self._send(200, epd.db.roadmap_upsert(seg[2], by="justin", **body) or {})
+                # one field from the team tab: runs the matching roadmap.py op with --push, straight onto the master
+                outs = [epd.set_field(seg[2], f, v) for f, v in body.items()]
+                return self._send(200, {"ok": True, "out": " | ".join(o.splitlines()[0] for o in outs if o)})
             if len(seg) == 3 and seg[:2] == ["api", "items"]:
                 allowed = {k: v for k, v in body.items() if k in ("title", "note", "owner", "assignee", "shipyard_key", "prd_url", "status", "route", "live_sid", "permalink", "requester", "channel", "context", "granola", "model", "lift")}
                 if "links" in body: allowed["links"] = json.dumps(body["links"])

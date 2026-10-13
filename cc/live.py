@@ -61,7 +61,7 @@ def transcript(sid, limit=14, include_tools=False):
         if not include_tools: txt = "\n".join(l for l in txt.splitlines() if not l.startswith("⚙ "))
         if not txt.strip(): continue
         if msgs and msgs[-1]["role"] == d["type"] and d["type"] == "assistant": msgs[-1]["text"] += "\n" + txt; continue
-        msgs.append({"role": d["type"], "text": txt[:4000], "ts": d.get("timestamp")})
+        msgs.append({"role": d["type"], "text": txt[:40000], "ts": d.get("timestamp")})
     return msgs[-limit:]
 
 def pending_question(sid):
@@ -97,6 +97,86 @@ def dialog(pane):
 
 def screen(pane, lines=40):
     return _tmux("capture-pane", "-p", "-t", pane, "-S", f"-{lines}") if pane else ""
+
+def visible(pane):
+    """Just what is on the pane right now, no scrollback — what an embedded terminal should show."""
+    return _tmux("capture-pane", "-p", "-t", pane) if pane else ""
+
+_OPTLINE = re.compile(r"^(\s*)(❯\s*)?(\d+)\.\s+(\S.*?)\s*$")
+_TABS = re.compile(r"^\s*←.*→\s*$")
+
+def options(pane, lines=40):
+    """The numbered option list currently on screen: [{n, label, hint, selected}].
+
+    The screen is the only truth here. An AskUserQuestion with three questions shows ONE of them at a
+    time and advances when you answer, so answering is driven one screen at a time rather than by
+    trying to model the whole dialog from the transcript."""
+    if not pane: return []
+    rows = [l.rstrip() for l in screen(pane, lines).splitlines()]
+    out, last_n = [], 0
+    for i, l in enumerate(rows):
+        m = _OPTLINE.match(l)
+        if not m: continue
+        n = int(m.group(3))
+        if n != last_n + 1:
+            if n != 1: continue      # a stray numbered line in prose, not a list
+            out = []                 # a new list started: the earlier one was scrollback
+        last_n = n
+        hint = ""
+        if i + 1 < len(rows):
+            nxt = rows[i + 1]
+            if nxt.strip() and not _OPTLINE.match(nxt) and (len(nxt) - len(nxt.lstrip())) > len(m.group(1)) + 1:
+                hint = nxt.strip()[:200]
+        out.append({"n": n, "label": m.group(4)[:200], "hint": hint, "selected": bool(m.group(2))})
+    return out
+
+def tabs(pane, lines=40):
+    """The `← Roadmap | PR 481 | ✓ Submit →` strip an AskUserQuestion draws above its options, so the
+    chat can say which of several questions is showing."""
+    for l in reversed(screen(pane, lines).splitlines()[-30:]):
+        if _TABS.match(l): return l.strip()
+    return None
+
+_KEYS = {"up": "Up", "down": "Down", "left": "Left", "right": "Right", "enter": "Enter",
+         "escape": "Escape", "esc": "Escape", "tab": "Tab", "shift-tab": "BTab", "space": "Space",
+         "backspace": "BSpace", "delete": "DC", "home": "Home", "end": "End",
+         "pageup": "PageUp", "pagedown": "PageDown", "ctrl-c": "C-c", "ctrl-r": "C-r", "ctrl-u": "C-u"}
+
+def key(pane, name):
+    """One named key into the pane. Whitelisted on purpose: anything not in the map would be passed to
+    tmux as a key NAME, and a typo there silently sends something else."""
+    k = _KEYS.get((name or "").strip().lower())
+    if not pane: raise RuntimeError("session has no tmux pane")
+    if not k: raise RuntimeError(f"{name!r} is not a key this can send")
+    subprocess.run(["tmux", "send-keys", "-t", pane, k], check=True, timeout=5)
+    return k
+
+def type_text(pane, text):
+    """Literal characters, no Enter — for a dialog that has a text field in it."""
+    if not pane: raise RuntimeError("session has no tmux pane")
+    if text: subprocess.run(["tmux", "send-keys", "-t", pane, "-l", text], check=True, timeout=5)
+
+def answer(pane, n, tries=16):
+    """Move the ❯ cursor onto option n, then press Enter — re-reading the screen after every move.
+
+    Never a blind Enter. A stray Enter into one of these dialogs picks whatever happened to be
+    highlighted, which is exactly how the EPD-sync answers got chosen by accident in September. If the
+    cursor cannot be verified onto the option, this raises instead of guessing."""
+    if not pane: raise RuntimeError("session has no tmux pane")
+    for _ in range(tries):
+        opts = options(pane)
+        if not opts: raise RuntimeError("there is no option list on the screen any more")
+        if not any(o["n"] == n for o in opts): raise RuntimeError(f"option {n} is not on the screen")
+        cur = next((o["n"] for o in opts if o["selected"]), None)
+        if cur is None: raise RuntimeError("cannot tell which option is highlighted")
+        if cur == n:
+            picked = next(o["label"] for o in opts if o["n"] == n)
+            subprocess.run(["tmux", "send-keys", "-t", pane, "Enter"], check=True, timeout=5)
+            time.sleep(0.5)
+            return {"ok": True, "picked": picked}
+        subprocess.run(["tmux", "send-keys", "-t", pane, "Down" if n > cur else "Up"], check=True, timeout=5)
+        time.sleep(0.25)
+    raise RuntimeError("could not move the highlight onto that option")
 
 _cache = {"at": 0.0, "val": [], "roster_at": 0.0}
 _CACHE_TTL = 2.0

@@ -59,6 +59,26 @@ h2.fold{margin-top:8px;cursor:pointer;user-select:none}h2.fold:hover{color:var(-
 .working{display:flex;gap:8px;align-items:center;color:var(--warn);font-size:12px;margin-top:6px}.ask{border:1px solid var(--warn);border-radius:6px;padding:8px 10px;margin:8px 0;color:var(--warn);font-size:13px}.ask .q{color:var(--text);margin-top:6px}.ask ol{margin:2px 0 4px 18px;color:var(--text)}.ask pre{white-space:pre-wrap;color:var(--muted);font-size:11px;margin:6px 0 0}.working .st{margin:0}
 .imgs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.imgs img{height:54px;border-radius:4px;border:1px solid var(--line)}
 .chatin textarea.drop{border-color:var(--accent)}
+.newbox.drop{outline:2px dashed var(--accent);outline-offset:-4px}
+.newbox .imgs{margin:4px 0 0}
+/* the terminal dialog, answerable here instead of in a separate Terminal window */
+.ask .tabline{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted);margin:6px 0 2px;white-space:pre-wrap}
+.ask .opts{margin:6px 0 0;outline:none;border-radius:6px}
+.ask .opts:focus{box-shadow:0 0 0 2px var(--accent)}
+.ask .opt{display:flex;gap:8px;padding:6px 8px 6px 22px;border-radius:5px;cursor:pointer;align-items:baseline}
+.ask .opt:hover{background:#1b2130}
+.ask .opt.sel{background:#1d2740}
+.ask .opt .n{position:relative;color:var(--muted);font-family:ui-monospace,Menlo,monospace;font-size:11px;flex:none;width:14px}
+.ask .opt.sel .n::before{content:'\276f';color:var(--accent);position:absolute;margin-left:-14px}
+.ask .opt b{font-weight:600;font-size:13px}
+.ask .opt i{display:block;font-style:normal;color:var(--muted);font-size:12px;margin-top:2px}
+.ask .askin{display:flex;gap:6px;margin-top:8px}
+.ask .askin input{flex:1;background:#0d1017;border:1px solid var(--line);border-radius:5px;color:var(--text);padding:5px 8px;font:inherit;font-size:13px}
+.term{display:none;margin:8px 0 0;border:1px solid var(--line);border-radius:6px;background:#05070b}
+.term pre{margin:0;padding:8px 10px;font-family:ui-monospace,Menlo,monospace;font-size:11px;line-height:1.35;color:#cbd5e1;white-space:pre;overflow:auto;max-height:340px;outline:none}
+.term pre:focus{box-shadow:inset 0 0 0 2px var(--accent)}
+.term .tbar{display:flex;gap:6px;align-items:center;padding:5px 8px;border-top:1px solid var(--line);flex-wrap:wrap}
+.term .tbar input{flex:1;min-width:120px;background:#0d1017;border:1px solid var(--line);border-radius:5px;color:var(--text);padding:4px 7px;font:inherit;font-size:12px}
 .body.drop{outline:2px dashed var(--accent);outline-offset:-4px;background:#12161f}
 .imgs .fchip.up{opacity:.55;font-style:italic}.imgs .fchip.bad{border-color:var(--bad);color:var(--bad)}
 .imgs .fchip{display:inline-block;font-size:11px;padding:2px 8px;border:1px solid var(--line,#333);border-radius:10px;margin:2px 4px 2px 0;cursor:pointer;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
@@ -91,17 +111,19 @@ h2.fold{margin-top:8px;cursor:pointer;user-select:none}h2.fold:hover{color:var(-
 .row .todos{display:none}.row.todo .todos{display:block}.row.todo .chat,.row.todo .imgs,.row.todo .chatin{display:none}.row.todo .acts .tdbtn{color:var(--accent);border-color:var(--accent)}
 .row .todos{padding:8px 12px;margin:0}.row .todos .tdh{display:none}.row .td .tdt{font-size:14px;line-height:1.5}.row .td{padding:4px 4px}
 .slotfold{margin:0 0 10px;font-size:12px}.slotfold a{color:var(--muted)}.slotfold a:hover{color:var(--text);text-decoration:none}.slotfold i{font-style:normal;display:inline-block;width:10px}.slotfold .slots{margin-top:8px}.slotfold .notebox{margin-top:8px}
+textarea.restored,input.restored{outline:2px solid var(--ok,#4ade80);outline-offset:-2px}
 </style></head><body>
-<header><h1>Command Center</h1><div class="tabs"><button class="on" onclick="tab('intake',this)">Intake</button><button onclick="tab('team',this)">Team</button><button onclick="tab('roadmap',this)">Roadmap</button><button onclick="tab('usage',this)" id="usagetab">Usage</button></div><span style="margin-left:auto"></span><button class="s" id="restartbtn" onclick="restartServer(this)" title="restart the command-center server (launchd brings it straight back). Claude sessions live in tmux and are not touched.">restart server</button></header><div id="down" style="display:none;background:var(--bad);color:#0b0d13;padding:8px 20px;font-weight:600">server is down — waiting for it to come back…</div>
+<header><h1>Command Center</h1><div class="tabs"><button class="on" onclick="tab('intake',this)">Intake</button><button onclick="tab('team',this)">Team</button><button onclick="tab('roadmap',this)">Roadmap</button><button onclick="tab('usage',this)" id="usagetab">Usage</button></div><span style="margin-left:auto"></span><button class="s" id="restartbtn" onclick="restartServer(this)" title="restart the command-center server (launchd brings it straight back). Claude sessions live in tmux and are not touched.">restart server</button></header><div id="down" style="display:none;background:var(--bad);color:#0b0d13;padding:8px 20px;font-weight:600"><span id="downmsg">server is down — waiting for it to come back…</span> <button class="s" id="downreload" style="display:none" onclick="location.reload()">reload now</button></div>
 <main>
 <section id="intake">
   <div class="two"><div>
-    <div class="newbox">
-      <input id="in" placeholder="Title — what this item is called">
-      <input id="inslack" placeholder="Slack link (thread permalink) — optional">
-      <input id="ingran" placeholder="Granola link (or paste the notes) — optional">
-      <textarea id="innote" placeholder="First note (optional). Say what you already think this is and what you want done — it becomes the opening message of the session." rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
-      <div class="newrow"><div style="display:flex;gap:10px;align-items:center"><label class="pill"><input type="checkbox" id="instart" checked><span>Start a Claude Code session</span></label><select id="inlift" class="lift" title="lift"><option value="">lift?</option><option value="light">light</option><option value="medium">medium</option><option value="heavy">heavy</option></select><select id="inmodel" class="sel"><option value="fable">Fable 5.1</option><option value="opus">Opus 5</option><option value="sonnet">Sonnet 5</option></select></div><button class="p" onclick="addItem()">New</button></div>
+    <div class="newbox" id="newbox" ondragover="dragOn(event,'new')" ondragleave="dragOff(event,'new')" ondrop="dragOff(event,'new');dropImgs(event,'new')">
+      <input id="in" data-draft="intake.title" placeholder="Title — what this item is called">
+      <input id="inslack" data-draft="intake.slack" placeholder="Slack link (thread permalink) — optional">
+      <input id="ingran" data-draft="intake.granola" placeholder="Granola link (or paste the notes) — optional">
+      <textarea id="innote" data-draft="intake.note" placeholder="First note (optional). Say what you already think this is and what you want done — it becomes the opening message of the session." rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')" ondrop="this.classList.remove('drop');dropImgs(event,'new')" onpaste="pasteImgs(event,'new')"></textarea>
+      <div class="imgs" id="imnew"></div>
+      <div class="newrow"><div style="display:flex;gap:10px;align-items:center"><label class="pill"><input type="checkbox" id="instart" checked><span>Start a Claude Code session</span></label><select id="inlift" class="lift" title="lift"><option value="">lift?</option><option value="light">light</option><option value="medium">medium</option><option value="heavy">heavy</option></select><select id="inmodel" class="sel"><option value="fable">Fable 5.1</option><option value="opus">Opus 5</option><option value="sonnet">Sonnet 5</option><option value="cursor">Cursor (Opus 4.6)</option></select></div><button class="p" onclick="addItem()">New</button></div>
     </div>
     <div class="muted" id="membar" title="live Claude sessions vs the cap (CC_MAX_LIVE), and what the Mac has left. Each session is ~1.9 GB: Claude itself plus the MCP servers it spawns."></div>
     <h2>Work items <span class="muted" id="citems"></span> <select id="sortby" class="sel" style="margin-left:10px" onchange="try{localStorage.setItem('cc.sort',this.value)}catch(e){};loadItems(true)"><option value="lift">lightest first</option><option value="added_desc">newest first</option><option value="added_asc">oldest first</option></select> <label class="muted" style="font-weight:400;margin-left:10px"><input type="checkbox" id="showtools" onchange="for(const id of openIds)loadChat(id)"> show tool calls</label></h2><div id="items"></div>
@@ -123,12 +145,63 @@ h2.fold{margin-top:8px;cursor:pointer;user-select:none}h2.fold:hover{color:var(-
 <script>
 mermaid.initialize({startOnLoad:false,theme:'dark',securityLevel:'loose'});
 const J=(u,o)=>fetch(u,o).then(r=>{serverUp(true);return r.json()}).catch(e=>{if(e instanceof TypeError)serverUp(false);throw e});
-let downSince=0,downTimer=null;function serverUp(ok){const b=document.getElementById('down');if(!b)return;if(ok){if(downSince){downSince=0;clearInterval(downTimer);downTimer=null;location.reload()}b.style.display='none';return}
+let downSince=0,downTimer=null;function serverUp(ok){const b=document.getElementById('down');if(!b)return;if(ok){if(downSince){downSince=0;clearInterval(downTimer);downTimer=null;
+  // Reloading throws away whatever is in a box. Wispr Flow pastes into the box that had the caret when you
+  // started talking; a reload mid-dictation replaces that element and the paste lands on nothing. So when
+  // anything is half-written, hold the reload and let the reader press the button.
+  if(draftsPending()){logIns('reload_held',null,0,'');document.getElementById('downmsg').textContent='server came back — this page is stale, but you have unsent text. Finish it, then:';document.getElementById('downreload').style.display='';return}
+  logIns('reload',null,0,'');location.reload()}b.style.display='none';return}
  if(!downSince){downSince=Date.now();b.style.display='';downTimer=setInterval(()=>fetch('/api/mem',{cache:'no-store'}).then(r=>{if(r.ok)serverUp(true)}).catch(()=>{}),1000)}}
 async function restartServer(btn){const t=btn.textContent;btn.disabled=true;btn.textContent='restarting…';try{await post('/api/restart',{})}catch(e){}
  const t0=Date.now();await new Promise(r=>setTimeout(r,800));while(Date.now()-t0<30000){try{const r=await fetch('/api/mem',{cache:'no-store'});if(r.ok){location.reload();return}}catch(e){}await new Promise(r=>setTimeout(r,500))}
  btn.disabled=false;btn.textContent=t;alert('The server did not come back in 30s. In a terminal: cc restart, then cc log.')}
 const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// --- drafts: every box with data-draft mirrors to localStorage as you type (or as Wispr Flow pastes) and is
+// put back on load, so a reload, a row rebuild or a crash never eats an unsent message. Cleared on send.
+const DK='cc.draft.';
+const dkey=el=>el&&el.dataset&&el.dataset.draft?DK+el.dataset.draft:null;
+function draftSave(el){const k=dkey(el);if(!k)return;try{el.value&&el.value.trim()?localStorage.setItem(k,el.value):localStorage.removeItem(k)}catch(e){}}
+function draftClear(el){const k=dkey(el);if(k)try{localStorage.removeItem(k)}catch(e){}}
+function draftRestore(el){const k=dkey(el);if(!k||el.value)return;try{const v=localStorage.getItem(k);if(!v)return;el.value=v;if(el.tagName==='TEXTAREA'&&el.id==='innote'){el.style.height='auto';el.style.height=el.scrollHeight+'px'}el.classList.add('restored');setTimeout(()=>el.classList.remove('restored'),2500)}catch(e){}}
+function draftRestoreAll(root){(root||document).querySelectorAll('[data-draft]').forEach(draftRestore)}
+// Anything half-written anywhere, or a caret sitting in a box: a reload would be destructive.
+const TEXTY=el=>el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&!/^(checkbox|radio|hidden|submit|button|range|file)$/i.test(el.type||'text'));
+function draftsPending(){for(const el of document.querySelectorAll('input,textarea')){if(!TEXTY(el))continue;if((el.value&&el.value.trim())||document.activeElement===el)return true}return false}
+document.addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.draft)draftSave(e.target)},true);
+new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes){if(n.nodeType!==1)continue;if(n.dataset&&n.dataset.draft)draftRestore(n);if(n.querySelectorAll)draftRestoreAll(n)}}).observe(document.documentElement,{childList:true,subtree:true});
+// --- insert log: the last 60 paste/insert events, kept across reloads, so the next "my dictation vanished"
+// is attributable instead of a guess. Read it with ccDiag() in the console.
+function logIns(kind,el,n,flavors){try{const L=JSON.parse(localStorage.getItem('cc.inserts')||'[]');L.push({t:new Date().toTimeString().slice(0,8),kind,el:el?(el.id||el.tagName):'',n,flavors});localStorage.setItem('cc.inserts',JSON.stringify(L.slice(-60)))}catch(e){}}
+window.CC_JS='2026-10-12c';
+window.ccDiag=()=>{const L=JSON.parse(localStorage.getItem('cc.inserts')||'[]');console.table(L);return L};
+// --- paste rescue. A dictation tool pastes into whatever holds the caret when you stop talking. If the caret
+// was lost in the meantime (a row moved, a panel redrew, the window changed), the paste fires with nothing
+// focused and the text is simply gone. Catch that and put it in the box you were last in.
+let lastBox=null;
+document.addEventListener('focusin',e=>{if(e.target&&TEXTY(e.target))lastBox=e.target},true);
+document.addEventListener('paste',e=>{const a=document.activeElement;
+ // Measured 2026-10-12: a 2201-character dictation arrived on the clipboard, aimed at the right box, and
+ // Chrome's own insert step then delivered nothing (insertFromPaste with no data) and the text was gone.
+ // Same clipboard pasted by hand 14s later landed fine. So do the insert ourselves rather than leave it to
+ // Chrome. execCommand keeps undo working; the splice is the fallback if it ever stops existing.
+ if(a&&a!==document.body&&TEXTY(a)&&a.dataset&&a.dataset.draft){const d=e.clipboardData;const t=d&&d.getData?d.getData('text/plain'):'';
+  if(t&&!filesOf(d).length){e.preventDefault();let ok=false;try{ok=document.execCommand('insertText',false,t)}catch(err){}
+   if(!ok){const i=a.selectionStart==null?a.value.length:a.selectionStart,j=a.selectionEnd==null?a.value.length:a.selectionEnd;
+    a.value=a.value.slice(0,i)+t+a.value.slice(j);try{a.setSelectionRange(i+t.length,i+t.length)}catch(err){}}
+   a.dispatchEvent(new Event('input',{bubbles:true}));logIns('inserted',a,t.length,ok?'execCommand':'splice')}
+  return}
+ if(a&&a!==document.body&&TEXTY(a))return;                       // a box we do not own has the caret: leave it alone
+ const dt=e.clipboardData;const t=dt&&dt.getData?dt.getData('text/plain'):'';
+ if(!t||!t.trim())return;
+ const el=lastBox&&document.contains(lastBox)?lastBox:document.getElementById('innote');
+ if(!el)return;
+ e.preventDefault();
+ const i=el.value.length;el.value=el.value?el.value.replace(/\s*$/,'')+'\n'+t:t;
+ el.focus();try{el.setSelectionRange(el.value.length,el.value.length)}catch(err){}
+ el.dispatchEvent(new Event('input',{bubbles:true}));
+ logIns('rescued',el,t.length,'caret was on '+(a?a.tagName:'nothing'))},true);
+document.addEventListener('paste',e=>{const dt=e.clipboardData;const t=dt&&dt.getData?dt.getData('text/plain'):'';logIns('paste',e.target,t?t.length:0,[...(dt&&dt.types||[])].join('+'))},true);
+document.addEventListener('beforeinput',e=>{if(/paste|drop/i.test(e.inputType||''))logIns(e.inputType,e.target,(e.data||'').length,e.defaultPrevented?'prevented':'')},true);
 const post=(u,b)=>J(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});const patch=(u,b)=>J(u,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
 function tab(n,b){document.querySelectorAll('main section').forEach(s=>s.style.display=s.id===n?'':'none');document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));if(n==='team')loadTeam();if(n==='roadmap')loadRoad();if(n==='usage')loadUsage()}
 async function loadUsage(force){const d=await J('/api/usage'+(force?'?refresh=1':''));const box=document.getElementById('usagebars');const tabb=document.getElementById('usagetab');
@@ -172,7 +245,7 @@ function head(t){const sh=t.shipyard_key?`<a href="${SY()}/t/${t.shipyard_key}" 
  const live=t.live?`<span class="muted">${t.live.status}</span>`:(t.live_sid?'<span class="muted" title="the process is gone but the conversation is saved; Resume picks it up where it stopped">stopped · resumable</span>':'<span class="muted">not started</span>');
  return `<div class="hd" data-sig='${sig(t).replace(/'/g,"&#39;")}' onclick="toggle('${t.id}',event)"><input type="checkbox" onclick="event.stopPropagation();done('${t.id}')" title="done → ends the Claude session and archives the item">${dot(t)}
  <div class="ti"><b id="ttl${t.id}" onclick="event.stopPropagation();editTitle('${t.id}')" title="click to rename">${esc(t.title)}</b><div class="m">${live} ${t.requester?esc(t.requester):''} ${sl} · ${sh} · ${prd} ${chips(t)} ${t.assignee?'<span class="tag team">→ '+esc(t.assignee.split('_')[0])+'</span>':''}${t.todos&&t.todos.length?` · <a href="#" target="_self" title="open the to-do list" onclick="event.stopPropagation();gotoTodo('${t.id}');return false">☑ ${t.todos.filter(x=>x.done).length}/${t.todos.length}</a>`:''}</div></div>
- <div class="acts" onclick="event.stopPropagation()">${t.live?`<button class="s" onclick="act('${t.id}','stop',this)" title="end the Claude session (frees ~1.5 GB); the item stays open and Resume brings it back">stop</button>`:`<button class="s" onclick="act('${t.id}','start',this)" title="${t.status!=='open'?'resumes the session and moves the item back to open':''}">${t.live_sid?(t.status!=='open'?'Resume + reopen':'Resume session'):'Start Claude session'}</button>`}<button class="s" onclick="act('${t.id}','prd_live',this)">PRD</button><select class="lift ${t.lift||''}" title="lift — sorts lightest first" onchange="patch('/api/items/${t.id}',{lift:this.value}).then(()=>loadItems(true))"><option value="" ${!t.lift?'selected':''}>lift?</option><option value="light" ${t.lift==='light'?'selected':''}>light</option><option value="medium" ${t.lift==='medium'?'selected':''}>medium</option><option value="heavy" ${t.lift==='heavy'?'selected':''}>heavy</option></select><select class="sel" title="model for this session" onchange="post('/api/items/${t.id}/model',{model:this.value}).then(()=>loadItems(true))"><option value="fable" ${(t.model||'fable')==='fable'?'selected':''}>Fable 5.1</option><option value="opus" ${t.model==='opus'?'selected':''}>Opus 5</option><option value="sonnet" ${t.model==='sonnet'?'selected':''}>Sonnet 5</option></select><button class="s" onclick="act('${t.id}','team',this)" title="hand off and walk away: needs a PRD link on the card. Reads the chat to pick who (Kevin, David, Rami, Colton), reassigns the ticket, has the session set the owner in the EPD roadmap, runs dbr done, DMs them the PRD link with a bandwidth ask, ends the session, archives the card">→ team</button><button class="s tdbtn" onclick="gotoTodo('${t.id}')" title="swap this card between its chat and its to-do list">${todoLabel(t,todoView.has(t.id))}</button></div></div>`}
+ <div class="acts" onclick="event.stopPropagation()">${t.live?`<button class="s" onclick="act('${t.id}','stop',this)" title="end the Claude session (frees ~1.5 GB); the item stays open and Resume brings it back">stop</button>`:`<button class="s" onclick="act('${t.id}','start',this)" title="${t.status!=='open'?'resumes the session and moves the item back to open':''}">${t.model==='cursor'?(t.live_sid||t.live?'Restart':'Start Cursor session'):t.live_sid?(t.status!=='open'?'Resume + reopen':'Resume session'):'Start Claude session'}</button>`}<button class="s" onclick="act('${t.id}','prd_live',this)">PRD</button><select class="lift ${t.lift||''}" title="lift — sorts lightest first" onchange="patch('/api/items/${t.id}',{lift:this.value}).then(()=>loadItems(true))"><option value="" ${!t.lift?'selected':''}>lift?</option><option value="light" ${t.lift==='light'?'selected':''}>light</option><option value="medium" ${t.lift==='medium'?'selected':''}>medium</option><option value="heavy" ${t.lift==='heavy'?'selected':''}>heavy</option></select><select class="sel" title="model for this session" onchange="post('/api/items/${t.id}/model',{model:this.value}).then(()=>loadItems(true))"><option value="fable" ${(t.model||'fable')==='fable'?'selected':''}>Fable 5.1</option><option value="opus" ${t.model==='opus'?'selected':''}>Opus 5</option><option value="sonnet" ${t.model==='sonnet'?'selected':''}>Sonnet 5</option><option value="cursor" ${t.model==='cursor'?'selected':''}>Cursor (Opus 4.6)</option></select><button class="s" onclick="act('${t.id}','team',this)" title="hand off and walk away: needs a PRD link on the card. Reads the chat to pick who (Kevin, David, Rami, Colton), reassigns the ticket, has the session set the owner in the EPD roadmap, runs dbr done, DMs them the PRD link with a bandwidth ask, ends the session, archives the card">→ team</button><button class="s tdbtn" onclick="gotoTodo('${t.id}')" title="swap this card between its chat and its to-do list">${todoLabel(t,todoView.has(t.id))}</button></div></div>`}
 function slot(id,key,label,href,ph,xf){const v=window._items[id][key]||'';const editing=window._edit&&window._edit[id+key];
  if(v&&!editing){return `<label>${label}</label><a href="${href(v)}" title="${esc(v)}" ${/^https?:/.test(v)?'target="_blank"':'onclick="return false"'}>${esc(key==='shipyard_key'?v:key==='prd_url'?(v.split('/d/')[1]?'Shipyard doc '+v.split('/d/')[1].slice(0,8):v):key==='granola'?(/^https?:/.test(v)?'Granola notes':v.slice(0,90)+(v.length>90?'…':'')):'thread')}</a><button class="s" onclick="editSlot('${id}','${key}')">edit</button>`}
  return `<label>${label}</label><input id="s_${key}${id}" value="${esc(v)}" placeholder="${ph}" onkeydown="if(event.key==='Enter')saveSlot('${id}','${key}')"><button class="s" onclick="saveSlot('${id}','${key}')">save</button>`}
@@ -186,10 +259,11 @@ function slots(t){window._items=window._items||{};window._items[t.id]=t;return `
 function editSlot(id,key){window._edit=window._edit||{};window._edit[id+key]=true;document.getElementById('sl'+id).outerHTML=slots(window._items[id]);const i=document.getElementById('s_'+key+id);if(i){i.focus();i.select()}}
 async function saveSlot(id,key){const i=document.getElementById('s_'+key+id);let v=i?i.value.trim():'';if(key==='shipyard_key')v=v.toUpperCase().replace(/^.*\/t\//,'');
  const r=await patch('/api/items/'+id,{[key]:v});if(r&&r.error){alert(r.error);return}if(window._edit)delete window._edit[id+key];window._items[id]=r;document.getElementById('sl'+id).outerHTML=slots(r);loadItems(true)}
-function body(t){const ta=(f,ph)=>`<textarea placeholder="${ph}" onblur="if(this.value!==(window._items['${t.id}'].${f}||''))patch('/api/items/${t.id}',{${f}:this.value}).then(()=>loadItems(true))">${esc(t[f]||'')}</textarea>`;
+function body(t){const ta=(f,ph)=>`<textarea data-draft="${f}.${t.id}" placeholder="${ph}" onblur="draftClear(this);if(this.value!==(window._items['${t.id}'].${f}||''))patch('/api/items/${t.id}',{${f}:this.value}).then(()=>loadItems(true))">${esc(t[f]||'')}</textarea>`;
  return `<div class="body" ondragover="dragOn(event,'${t.id}')" ondragleave="dragOff(event,'${t.id}')" ondrop="dragOff(event,'${t.id}');dropImgs(event,'${t.id}')"><div class="slotfold"><a href="#" target="_self" onclick="toggleSlots('${t.id}',this);return false"><i>▸</i> Note · Slack · Granola · Shipyard · PRD · Assignee</a><div id="slw${t.id}" style="display:none"><div class="notebox">${ta('note','first-look note + context — saved when you click away, and sent into the session if it is running')}</div>${slots(t)}</div></div>${t.body?`<div class="muted" style="font-size:12px;margin-bottom:8px">${esc(t.body).slice(0,500)}</div>`:''}
  ${todosBox(t)}<div class="chat md" id="c${t.id}" data-fp=""><span class="muted">${t.live?'loading…':(t.live_sid?'session stopped — Resume session':'no session yet — Start Claude session')}</span></div>
- <div class="imgs" id="im${t.id}"></div><div class="chatin"><textarea id="t${t.id}" placeholder="talk to this item's Claude session… (Enter sends, Shift+Enter newline, Esc stops and brings your last message back to edit, drop or paste files)" onkeydown="keyd(event,'${t.id}')" ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')" ondrop="this.classList.remove('drop');dropImgs(event,'${t.id}')" onpaste="pasteImgs(event,'${t.id}')"></textarea><button class="p" onclick="chat('${t.id}')">Send</button><button class="s stop" onclick="stopTurn('${t.id}',this)" title="interrupt what this session is doing (Esc)">Stop</button></div></div>`}
+ <div class="term" id="tm${t.id}"><pre id="scr${t.id}" tabindex="0" onkeydown="termKey(event,'${t.id}')">connecting\u2026</pre><div class="tbar"><button class="s" onclick="termSend('${t.id}','up')">\u2191</button><button class="s" onclick="termSend('${t.id}','down')">\u2193</button><button class="s" onclick="termSend('${t.id}','enter')">Enter</button><button class="s" onclick="termSend('${t.id}','tab')">Tab</button><button class="s" onclick="termSend('${t.id}','escape')">Esc</button><input id="ti${t.id}" placeholder="type into the session (Enter)" onkeydown="if(event.key==='Enter'){termType('${t.id}')}"><button class="s" onclick="termOn('${t.id}')">close</button></div></div>
+ <div class="imgs" id="im${t.id}"></div><div class="chatin"><textarea id="t${t.id}" data-draft="chat.${t.id}" placeholder="talk to this item's Claude session… (Enter sends, Shift+Enter newline, Esc stops and brings your last message back to edit, drop or paste files)" onkeydown="keyd(event,'${t.id}')" ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')" ondrop="this.classList.remove('drop');dropImgs(event,'${t.id}')" onpaste="pasteImgs(event,'${t.id}')"></textarea><button class="p" onclick="chat('${t.id}')">Send</button><button class="s stop" onclick="stopTurn('${t.id}',this)" title="interrupt what this session is doing (Esc)">Stop</button></div></div>`}
 const pendingImgs={};
 const MAX_UPLOAD=25*1024*1024;   // the upload body is base64 inside JSON; past this both the browser and the server start to hurt
 // --- per-item to-do list: sessions can only add lines; here you check, edit, delete and add by hand.
@@ -222,7 +296,7 @@ async function addImg(id,file){const slot={name:file.name||'pasted',img:(file.ty
  (pendingImgs[id]=pendingImgs[id]||[]).push(slot);renderImgs(id);
  if(file.size>MAX_UPLOAD){slot.state='bad';slot.name=`${slot.name} — too big (${Math.round(file.size/1048576)}MB, max 25MB)`;renderImgs(id);return}
  try{const data=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=()=>rej(fr.error||new Error('could not read file'));fr.readAsDataURL(file)});
-  const r=await post(`/api/items/${id}/upload`,{name:file.name||'screenshot.png',data});
+  const r=await post(id==='new'?'/api/uploads':`/api/items/${id}/upload`,{name:file.name||'screenshot.png',data});
   if(!r||!r.path)throw new Error((r&&r.error)||'upload failed');
   Object.assign(slot,{path:r.path,data,state:'ok',name:file.name||r.path.split('/').pop()})}
  catch(err){slot.state='bad';slot.name=`${slot.name} — ${String(err&&err.message||err).slice(0,60)}`}
@@ -236,11 +310,15 @@ function filesOf(dt){if(!dt)return [];if(dt.files&&dt.files.length)return [...dt
  return [...(dt.items||[])].filter(i=>i.kind==='file').map(i=>i.getAsFile()).filter(Boolean)}
 const hasFiles=dt=>[...(dt&&dt.types||[])].includes('Files');
 function dropImgs(e,id){e.preventDefault();e.stopPropagation();for(const f of filesOf(e.dataTransfer))addImg(id,f)}
-function pasteImgs(e,id){const fs=filesOf(e.clipboardData);if(fs.length){e.preventDefault();for(const f of fs)addImg(id,f)}}
+function pasteImgs(e,id){const dt=e.clipboardData;const txt=dt&&dt.getData?dt.getData('text/plain'):'';const fs=filesOf(dt);if(!fs.length)return;
+ // Only swallow the paste when it is purely files. A clipboard carrying both (some apps, and dictation tools
+ // that paste rich text) used to lose the text silently.
+ if(!(txt&&txt.trim()))e.preventDefault();
+ for(const f of fs)addImg(id,f)}
 // The whole open row is the drop target, not just the little text box — aiming at the box was the hard part.
 function dragOn(e,id){if(!hasFiles(e.dataTransfer))return;e.preventDefault();e.stopPropagation();e.dataTransfer.dropEffect='copy';bodyOf(id)&&bodyOf(id).classList.add('drop')}
 function dragOff(e,id){bodyOf(id)&&bodyOf(id).classList.remove('drop')}
-const bodyOf=id=>{const r=document.getElementById('r'+id);return r&&r.querySelector(':scope > .body')};
+const bodyOf=id=>id==='new'?document.getElementById('newbox'):(()=>{const r=document.getElementById('r'+id);return r&&r.querySelector(':scope > .body')})();
 // Without these, a file dropped even slightly off target makes Chrome leave the app and open the file itself.
 window.addEventListener('dragover',e=>{if(hasFiles(e.dataTransfer))e.preventDefault()});
 window.addEventListener('drop',e=>{if(hasFiles(e.dataTransfer))e.preventDefault()});
@@ -253,14 +331,18 @@ function toggle(id,e){if(e.target.tagName==='A'||e.target.tagName==='INPUT')retu
 function render(text){try{return marked.parse(text,{breaks:true})}catch(e){return esc(text)}}
 async function loadChat(id){const el=document.getElementById('c'+id);if(!el||todoView.has(id))return;if(inflight.has('chat'+id))return;const tools=document.getElementById('showtools').checked;inflight.add('chat'+id);let d;try{d=await J(`/api/items/${id}/messages${tools?'?tools=1':''}`)}catch(e){return}finally{inflight.delete('chat'+id)}
  const st=document.querySelector('#r'+id+' .st');if(st&&d.status)st.className='st '+d.status;chatStatus[id]=d.status;
- chatQ[id]=d.question||null;const fp=d.messages.length+':'+(d.messages.length?d.messages[d.messages.length-1].text.length:0)+':'+tools+':'+d.status+':'+(d.question?JSON.stringify(d.question).length:0)+':'+(d.dialog?d.dialog.length:0);
+ chatQ[id]=d.question||null;const fp=d.messages.length+':'+(d.messages.length?d.messages[d.messages.length-1].text.length:0)+':'+tools+':'+d.status+':'+(d.question?JSON.stringify(d.question).length:0)+':'+(d.dialog?d.dialog.length:0)+':'+JSON.stringify(d.options||[]);
  if(el.dataset.fp===fp){const w=el.querySelector(':scope > .working');if(w&&d.status==='busy'){const want='working'+(d.last_tool?' — '+d.last_tool:'…');if(w.dataset.t!==want){w.dataset.t=want;w.innerHTML='<span class="st busy"></span> '+esc(want)}}return}el.dataset.fp=fp;
  const atBottom=el.scrollHeight-el.scrollTop-el.clientHeight<60;const top=el.scrollTop;
- el.innerHTML=(d.messages.map(m=>m.role==='user'?`<div class="u">▸ ${esc(m.text)}</div>`:`<div class="a">${render(m.text)}</div>`).join('')||`<span class="muted">${liveOf[id]?'waiting for the first reply…':'no session yet — Start Claude session'}</span>`)
-  +(d.question?`<div class="ask"><b>Claude is asking you</b> — answer in the terminal, chat messages sent now would answer it by accident. <button class="s" onclick="openTerm('${id}')">open terminal</button>`+d.question.map(q=>`<div class="q">${esc(q.q)}</div><ol>${(q.options||[]).map(o=>`<li>${esc(o)}</li>`).join('')}</ol>`).join('')+`</div>`:'')
-  +(d.dialog?`<div class="ask"><b>Waiting on you in the terminal</b> <button class="s" onclick="openTerm('${id}')">open terminal</button><pre>${esc(d.dialog)}</pre></div>`:'')
+ const hadFocus=document.activeElement&&document.activeElement.id==='op'+id;const typing=document.activeElement&&document.activeElement.id==='qa'+id?document.activeElement.value:null;
+ el.innerHTML=(d.messages.map(m=>m.role==='user'?`<div class="u">▸ ${esc(m.text)}</div>`:`<div class="a">${render(m.text)}</div>`).join('')||`<span class="muted">${liveOf[id]?'waiting for the first reply…':(window._items&&window._items[id]&&window._items[id].model==='cursor'?'Cursor session — send a message to start':'no session yet — Start Claude session')}</span>`)
+  +askBox(id,d)
   +(d.status==='busy'?`<div class="working"><span class="st busy"></span> working${d.last_tool?' — '+esc(d.last_tool):'…'}</div>`:'');
- el.scrollTop=atBottom?el.scrollHeight:top}
+ el.scrollTop=atBottom?el.scrollHeight:top;
+ // the poll rewrites this whole block every 2.5s; without this, ↑ ↓ stops working mid-answer and a
+ // half-typed answer disappears under you
+ if(hadFocus){const o=document.getElementById('op'+id);if(o)o.focus({preventScroll:true})}
+ if(typing!==null){const q=document.getElementById('qa'+id);if(q){q.value=typing;q.focus({preventScroll:true})}}}
 async function act(id,kind,btn){const r=document.getElementById('r'+id);r.classList.add('open');openIds.add(id);
  const label=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent=kind==='start'?'starting…':kind==='team'?'reading the chat…':'sent'}
  try{
@@ -282,14 +364,50 @@ async function handoff(id,btn,label){
  if(res.error){alert(res.error);reset();return}
  openIds.delete(id);reset();
  await loadItems(true)}
+// Answering without leaving the chat. The transcript says a question was ASKED; the pane says what is
+// actually on screen and selectable. Options come from the pane, so the same widget answers an
+// AskUserQuestion, a permission prompt and the folder-trust dialog.
+function askBox(id,d){const q=d.question,opts=d.options||[];
+ if(!q&&!d.dialog&&!opts.length)return '';
+ const qt=q&&q.length?q.map(x=>x.q).filter(Boolean).join(' \u00b7 '):'';
+ return `<div class="ask" id="ask${id}"><b>${q?'Claude is asking you':'Waiting on you'}</b>${qt?` <span class="muted">${esc(qt)}</span>`:''}`
+  +(d.tabs?`<div class="tabline">${esc(d.tabs)}</div>`:'')
+  +(opts.length
+    ?`<div class="opts" id="op${id}" tabindex="0" onkeydown="askKey(event,'${id}')">`
+      +opts.map(o=>`<div class="opt${o.selected?' sel':''}" onclick="askPick('${id}',${o.n})"><span class="n">${o.n}</span><span><b>${esc(o.label)}</b>${o.hint?`<i>${esc(o.hint)}</i>`:''}</span></div>`).join('')
+      +`</div><div class="muted" style="font-size:11px;margin-top:5px">click an answer, or click the list and use \u2191 \u2193 then Enter</div>`
+    :`<pre>${esc(d.dialog||'')}</pre>`)
+  +`<div class="askin"><input id="qa${id}" placeholder="\u2026or type your own answer (Enter)" onkeydown="if(event.key==='Enter'){askType('${id}')}"><button class="s" onclick="termOn('${id}')" title="the session's terminal, mirrored here">terminal</button><button class="s" onclick="openTerm('${id}')" title="open the real Terminal window">open terminal</button></div></div>`}
+function askRefresh(id){const el=document.getElementById('c'+id);if(el)el.dataset.fp='';setTimeout(()=>loadChat(id),600);setTimeout(()=>loadChat(id),1800);termPoll(id)}
+async function askPick(id,n){const r=await post(`/api/items/${id}/answer`,{choice:n});if(r&&r.error)alert(r.error);askRefresh(id)}
+async function askType(id){const i=document.getElementById('qa'+id);const v=i&&i.value.trim();if(!v)return;i.value='';const r=await post(`/api/items/${id}/answer`,{text:v});if(r&&r.error){i.value=v;alert(r.error)}askRefresh(id)}
+const ASKKEYS={ArrowUp:'up',ArrowDown:'down',Enter:'enter',Escape:'escape',Tab:'tab'};
+function askKey(e,id){const k=ASKKEYS[e.key];if(!k)return;e.preventDefault();post(`/api/items/${id}/keys`,{key:k}).then(r=>{if(r&&r.error)alert(r.error);askRefresh(id)})}
+// The session's terminal, mirrored into the chat: the pane's screen on a 1s poll, and keystrokes sent back
+// into it. Not a real pty \u2014 it is tmux capture-pane out and tmux send-keys in \u2014 but it is the same pane.
+const termIds=new Set();
+function termOn(id){const box=document.getElementById('tm'+id);if(!box)return;
+ if(termIds.has(id)){termIds.delete(id);box.style.display='none';return}
+ termIds.add(id);box.style.display='block';termPoll(id);const pre=document.getElementById('scr'+id);if(pre)pre.focus({preventScroll:true})}
+async function termPoll(id){if(!termIds.has(id))return;let r;try{r=await J(`/api/items/${id}/screen`)}catch(e){return}
+ const pre=document.getElementById('scr'+id);if(pre)pre.textContent=r.screen||r.error||'(nothing on the pane)'}
+const TERMKEYS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',Enter:'enter',Escape:'escape',Tab:'tab',Backspace:'backspace',PageUp:'pageup',PageDown:'pagedown'};
+function termKey(e,id){const k=TERMKEYS[e.key];if(!k)return;e.preventDefault();termSend(id,k)}
+async function termSend(id,k){const r=await post(`/api/items/${id}/keys`,{key:k});if(r&&r.error){alert(r.error);return}
+ const pre=document.getElementById('scr'+id);if(pre&&r.screen!==undefined)pre.textContent=r.screen;askRefresh(id)}
+async function termType(id){const i=document.getElementById('ti'+id);const v=i&&i.value.trim();if(!v)return;i.value='';
+ const r=await post(`/api/items/${id}/answer`,{text:v});if(r&&r.error){i.value=v;alert(r.error);return}askRefresh(id)}
 const chatQ={};async function openTerm(id){const sid=liveOf[id];if(!sid){alert('no live session');return}await post(`/api/live/${sid}/focus`,{})}
-async function chat(id){if(chatQ[id]){alert('Claude is asking you a question in the terminal. Answer it there first (open terminal), then send this.');return}const ta=document.getElementById('t'+id);const v=ta.value.trim();const L=pendingImgs[id]||[];if(L.some(x=>x.state==='up')){alert('still uploading — try again in a second');return}
- const imgs=L.filter(x=>x.state==='ok'&&x.path).map(x=>x.path);if(!v&&!imgs.length)return;lastSent[id]={text:v,at:Date.now()};ta.value='';pendingImgs[id]=[];renderImgs(id);const el=document.getElementById('c'+id);el.innerHTML+=`<div class="u">▸ ${esc(v)}${imgs.length?' <span class="muted">+'+imgs.length+' file'+(imgs.length>1?'s':'')+'</span>':''}</div><div class="working"><span class="st busy"></span> sending…</div>`;el.scrollTop=el.scrollHeight;const r=await post(`/api/items/${id}/send`,{text:v,images:imgs});if(r&&r.error){ta.value=v;const w=el.querySelector(':scope > .working');if(w)w.remove();alert(r.error)}el.dataset.fp='';setTimeout(()=>loadChat(id),1500);ta.focus()}
+async function chat(id){if(chatQ[id]){alert('Claude is asking you a question. Answer it in the question box just above \u2014 a message sent now would be read as the answer.');return}const ta=document.getElementById('t'+id);const v=ta.value.trim();const L=pendingImgs[id]||[];if(L.some(x=>x.state==='up')){alert('still uploading — try again in a second');return}
+ const imgs=L.filter(x=>x.state==='ok'&&x.path).map(x=>x.path);if(!v&&!imgs.length)return;lastSent[id]={text:v,at:Date.now()};ta.value='';draftClear(ta);pendingImgs[id]=[];renderImgs(id);const el=document.getElementById('c'+id);el.innerHTML+=`<div class="u">▸ ${esc(v)}${imgs.length?' <span class="muted">+'+imgs.length+' file'+(imgs.length>1?'s':'')+'</span>':''}</div><div class="working"><span class="st busy"></span> sending…</div>`;el.scrollTop=el.scrollHeight;const r=await post(`/api/items/${id}/send`,{text:v,images:imgs});if(r&&r.error){ta.value=v;draftSave(ta);const w=el.querySelector(':scope > .working');if(w)w.remove();alert(r.error)}el.dataset.fp='';setTimeout(()=>loadChat(id),1500);ta.focus()}
 async function done(id){await post(`/api/items/${id}/done`);openIds.delete(id);loadItems(true)}
 async function addItem(){const i=document.getElementById('in'),sl=document.getElementById('inslack'),n=document.getElementById('innote'),st=document.getElementById('instart');let v=i.value.trim(),link=sl.value.trim();
  if(/slack\.com\/archives\//.test(v)&&!link){link=v;v=''}   // a permalink typed into the title box still counts as the Slack link
  if(!v&&!link)return;
- const b={text:v,link};b.note=n.value.trim();b.start=st.checked;b.model=document.getElementById('inmodel').value;b.granola=document.getElementById('ingran').value.trim();b.lift=document.getElementById('inlift').value;i.value='';sl.value='';n.value='';n.style.height='';document.getElementById('ingran').value='';i.placeholder=b.start?'starting a Claude Code session…':'adding…';
+ const b={text:v,link};b.note=n.value.trim();b.start=st.checked;b.model=document.getElementById('inmodel').value;b.granola=document.getElementById('ingran').value.trim();b.lift=document.getElementById('inlift').value;
+ const F=pendingImgs['new']||[];if(F.some(x=>x.state==='up')){alert('still uploading \u2014 try again in a second');return}
+ b.images=F.filter(x=>x.state==='ok'&&x.path).map(x=>x.path);pendingImgs['new']=[];renderImgs('new');
+ i.value='';sl.value='';n.value='';n.style.height='';document.getElementById('ingran').value='';[i,sl,n,document.getElementById('ingran')].forEach(draftClear);i.placeholder=b.start?'starting a Claude Code session…':'adding…';
  const r=await post('/api/items',b);i.placeholder='Title — what this item is called';if(r&&r.id){openIds.add(r.id)}await loadItems(true);if(r&&r.id)setTimeout(()=>loadChat(r.id),2500)}
 for(const id of ['in','inslack','ingran'])document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addItem()});document.getElementById('innote').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')addItem()});
 function toggleArch(){showArch=!showArch;document.getElementById('arch').style.display=showArch?'':'none';loadItems()}
@@ -308,19 +426,19 @@ async function loadTeam(refresh){const g=document.getElementById('teamcards');if
  <div class="muted" style="font-size:12px;margin:6px 0 10px">${m.repos.map(r=>r[0]+' '+r[1]).join(' · ')}${m.fetched_at?' · fetched '+m.fetched_at.slice(5,16).replace('T',' '):''}</div>
  ${roadmapFor(m.login)}${tix('From me',m.tickets_from_me)}${tixOthers(m)}</div>`).join('');
  loadEpd()}
-// --- EPD Rolling Roadmap. The same rows the team edits in the claude.ai artifact; a 15-minute sync keeps
-// the two honest. Edits here are instant locally and go up on the next cycle.
+// --- EPD Rolling Roadmap. The same rows the team edits on the Shipyard board (GTMP-1181). Opening this
+// tab runs roadmap.py sync for every owner; each edit here runs one roadmap.py op with --push.
 let epdRows={},epdMeta={phases:[],delivery:[],artifact:'#'};
 function epdSlug(login){return (login||'').split('-')[0]}
 async function loadEpd(refresh){const d=await J('/api/epd'+(refresh?'?refresh=1':''));epdMeta=d;epdRows={};
  (d.projects||[]).forEach(r=>{(epdRows[r.assignee]=epdRows[r.assignee]||[]).push(r)});
  document.querySelectorAll('[data-epd]').forEach(el=>{el.innerHTML=epdTable(epdRows[el.dataset.epd]||[])})}
-function roadmapFor(login){const s=epdSlug(login);return `<h2 style="margin-top:8px">Roadmap <a class="muted" style="font-size:11px;font-weight:400" target="_blank" href="${epdMeta.artifact||'#'}">artifact</a></h2><div data-epd="${s}">${epdTable(epdRows[s]||[])}</div>`}
+function roadmapFor(login){const s=epdSlug(login);return `<h2 style="margin-top:8px">Roadmap <a class="muted" style="font-size:11px;font-weight:400" target="_blank" href="${epdMeta.board||epdMeta.artifact||'#'}">Shipyard board</a></h2><div data-epd="${s}">${epdTable(epdRows[s]||[])}</div>`}
 function epdSel(k,f,val,opts){return `<select class="sel" onchange="epdSet('${k}','${f}',this.value)">${['',...opts].map(o=>`<option value="${o}" ${o===(val||'')?'selected':''}>${o||'—'}</option>`).join('')}</select>`}
 function epdTable(rs){if(!rs.length)return'<div class="muted" style="font-size:12px">no roadmap rows</div>';
  return `<table><thead><tr><th>#</th><th>Project</th><th>Phase</th><th>Delivery</th><th>Progress</th><th>Team</th></tr></thead><tbody>${
  rs.map(r=>`<tr><td><input class="epdrank" value="${r.rank||''}" title="top-three rank" onchange="epdSet('${r.task_key}','rank',this.value)"></td>
- <td><a target="_blank" href="${r.link||'#'}" title="${r.link_kind==='prd'?'PRD':'no PRD yet — opens the ticket'}">${esc(r.title||'')}</a> <a class="muted" style="font-size:11px" target="_blank" href="${SY()}/t/${r.task_key}">${r.task_key}</a></td>
+ <td><a target="_blank" href="${r.link||'#'}" title="${r.link_kind==='prd'?'PRD':'no PRD yet — opens the ticket'}">${esc(r.title||'')}</a> ${r.ticket?`<a class="muted" style="font-size:11px" target="_blank" href="${SY()}/t/${r.ticket}">${r.ticket}</a>`:''}</td>
  <td>${epdSel(r.task_key,'phase',r.phase,epdMeta.phases||[])}</td>
  <td>${epdSel(r.task_key,'delivery',r.delivery,epdMeta.delivery||[])}</td>
  <td><span class="prog"><i style="width:${r.progress||0}%"></i></span></td>
@@ -348,6 +466,7 @@ try{const sv=localStorage.getItem('cc.sort');if(sv)document.getElementById('sort
 J('/api/config').then(c=>{window._cfg=c;window._roster=c.roster;loadItems(true)});
 loadItems(true);loadMine();setInterval(()=>{if(!document.hidden)loadItems(false)},30000);
 setInterval(()=>{if(document.hidden)return;chatTick++;for(const id of openIds){if(chatStatus[id]==='busy'||chatTick%4===0)loadChat(id)}},2500);
+setInterval(()=>{if(document.hidden)return;for(const id of termIds)termPoll(id)},1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadItems(false);for(const id of openIds)loadChat(id)}});
 (function(){const d=document.getElementById('divider'),root=document.documentElement;try{const w=localStorage.getItem('cc.prw');if(w)root.style.setProperty('--prw',w+'px')}catch(e){}
  let drag=false;d.addEventListener('mousedown',e=>{drag=true;d.classList.add('on');e.preventDefault()});

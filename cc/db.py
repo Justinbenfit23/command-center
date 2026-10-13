@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS items (
   shipyard_key TEXT, prd_url TEXT,
   route TEXT DEFAULT 'me', scores TEXT DEFAULT '{}', autonomy_total INTEGER, band TEXT, rationale TEXT DEFAULT '',
   claude_session_id TEXT, intake_event_id INTEGER, links TEXT DEFAULT '[]', live_sid TEXT, context TEXT DEFAULT '', granola TEXT DEFAULT '', model TEXT, slack_context TEXT, cwd TEXT, live_pane TEXT, pending_seed TEXT, lift TEXT,
+  attachments TEXT DEFAULT '[]',        -- absolute paths of files dropped on the first note, before any session existed
   created_at TEXT NOT NULL, updated_at TEXT NOT NULL, archived_at TEXT
 );
 CREATE TABLE IF NOT EXISTS item_messages (
@@ -76,7 +77,7 @@ def _connect():
     cols = [r[1] for r in c.execute("PRAGMA table_info(items)")]
     if "links" not in cols: c.execute("ALTER TABLE items ADD COLUMN links TEXT DEFAULT '[]'")
     if "live_sid" not in cols: c.execute("ALTER TABLE items ADD COLUMN live_sid TEXT")
-    for col, ddl in (("context", "TEXT DEFAULT ''"), ("granola", "TEXT DEFAULT ''"), ("model", "TEXT"), ("slack_context", "TEXT"), ("cwd", "TEXT"), ("live_pane", "TEXT"), ("pending_seed", "TEXT"), ("lift", "TEXT")):
+    for col, ddl in (("context", "TEXT DEFAULT ''"), ("granola", "TEXT DEFAULT ''"), ("model", "TEXT"), ("slack_context", "TEXT"), ("cwd", "TEXT"), ("live_pane", "TEXT"), ("pending_seed", "TEXT"), ("lift", "TEXT"), ("attachments", "TEXT DEFAULT '[]'")):
         if col not in cols: c.execute(f"ALTER TABLE items ADD COLUMN {col} {ddl}")
     return c
 
@@ -89,6 +90,8 @@ def _load(t):
         t["scores"] = json.loads(t.get("scores") or "{}")
         try: t["links"] = json.loads(t.get("links") or "[]")
         except Exception: t["links"] = []
+        try: t["attachments"] = json.loads(t.get("attachments") or "[]")
+        except Exception: t["attachments"] = []
     return t
 
 def insert_item(**f):
