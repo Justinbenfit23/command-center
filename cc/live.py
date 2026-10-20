@@ -32,9 +32,41 @@ def _title(pane, titles=None):
     if titles is None: titles = _titles()
     return titles.get(pane)
 
+_paths = {}
 def _transcript_path(sid):
+    """Cached: a glob over every project folder on each poll added up across open chats."""
+    p = _paths.get(sid)
+    if p and os.path.exists(p): return p
     hits = glob.glob(os.path.join(PROJ, "*", f"{sid}.jsonl"))
-    return max(hits, key=os.path.getmtime) if hits else None
+    p = max(hits, key=os.path.getmtime) if hits else None
+    if p: _paths[sid] = p
+    return p
+
+_memo_cache = {}
+def _by_file(fn):
+    """Reuse fn's last answer for a session until its transcript changes size or mtime. Most open chats
+    are idle, so most polls now cost one stat instead of re-parsing hundreds of transcript lines."""
+    def wrap(sid, *a, **k):
+        p = _transcript_path(sid)
+        try: st = os.stat(p); stamp = (st.st_size, st.st_mtime_ns)
+        except Exception: return fn(sid, *a, **k)
+        key = (fn.__name__, sid, a, tuple(sorted(k.items())))
+        hit = _memo_cache.get(key)
+        if hit and hit[0] == stamp: return hit[1]
+        val = fn(sid, *a, **k); _memo_cache[key] = (stamp, val); return val
+    wrap.__name__ = fn.__name__; wrap.__doc__ = fn.__doc__
+    return wrap
+
+def _tail(p, n, cap=8 << 20):
+    """The last n lines of a file, read backward from the end. Transcripts run to 40MB+, and reading the
+    whole file on every poll held the GIL long enough that a dropped screenshot sat waiting behind it."""
+    with open(p, "rb") as f:
+        f.seek(0, 2); end = pos = f.tell(); buf = b""
+        while pos > 0 and buf.count(b"\n") <= n and end - pos < cap:
+            step = min(256 << 10, pos); pos -= step; f.seek(pos); buf = f.read(step) + buf
+    lines = buf.decode("utf-8", errors="replace").splitlines(True)
+    if pos > 0: lines = lines[1:]   # the first line is cut mid-way
+    return lines[-n:]
 
 def _text_of(content):
     """Human-readable text from a message content (str or block list). Tool noise collapsed to one line each."""
@@ -48,10 +80,11 @@ def _text_of(content):
         elif t == "thinking": pass
     return "\n".join(out)
 
+@_by_file
 def transcript(sid, limit=14, include_tools=False):
     p = _transcript_path(sid)
     if not p: return []
-    lines = open(p, errors="replace").readlines()[-400:]
+    lines = _tail(p, 400)
     msgs = []
     for l in lines:
         try: d = json.loads(l)
@@ -64,6 +97,7 @@ def transcript(sid, limit=14, include_tools=False):
         msgs.append({"role": d["type"], "text": txt[:40000], "ts": d.get("timestamp")})
     return msgs[-limit:]
 
+@_by_file
 def pending_question(sid):
     """An AskUserQuestion the session is blocked on. While its dialog is up in the terminal, anything typed
     from here lands in the dialog, and Enter picks the highlighted answer, so a chat message sent from the
@@ -71,7 +105,7 @@ def pending_question(sid):
     p = _transcript_path(sid)
     if not p: return None
     asked = {}
-    for l in open(p, errors="replace").readlines()[-300:]:
+    for l in _tail(p, 300):
         try: d = json.loads(l)
         except Exception: continue
         c = (d.get("message") or {}).get("content")
@@ -85,11 +119,16 @@ def pending_question(sid):
     return list(asked.values())[-1] if asked else None
 
 _DIALOG = re.compile(r"^\s*❯\s+\d+\.\s+\S")
+def _unbox(l):
+    """A dialog line with any side border (│ … │) peeled off, indentation kept."""
+    l = l.rstrip()
+    if l.lstrip().startswith(("│", "┃")): l = l.lstrip()[1:]
+    return l.rstrip(" │┃")
 def dialog(pane):
     """A modal in the terminal (permission prompt, folder trust, model switch): a numbered option list with
     the ❯ cursor on one of them. Keys sent from here go into it, not the prompt box."""
     if not pane: return None
-    tail = [l.rstrip() for l in screen(pane, 25).splitlines()[-25:]]
+    tail = [_unbox(l) for l in screen(pane, 25).splitlines()[-25:]]
     if not any(_DIALOG.match(l) for l in tail): return None
     if not any(("esc" in l.lower() or "enter" in l.lower()) for l in tail): return None
     body = [l for l in tail if l.strip()]
@@ -112,7 +151,7 @@ def options(pane, lines=40):
     time and advances when you answer, so answering is driven one screen at a time rather than by
     trying to model the whole dialog from the transcript."""
     if not pane: return []
-    rows = [l.rstrip() for l in screen(pane, lines).splitlines()]
+    rows = [_unbox(l) for l in screen(pane, lines).splitlines()]
     out, last_n = [], 0
     for i, l in enumerate(rows):
         m = _OPTLINE.match(l)
@@ -129,6 +168,29 @@ def options(pane, lines=40):
                 hint = nxt.strip()[:200]
         out.append({"n": n, "label": m.group(4)[:200], "hint": hint, "selected": bool(m.group(2))})
     return out
+
+_BORDER = "│╭╮╰╯─┃━┌┐└┘"
+def dialog_prompt(pane, lines=40):
+    """The question a terminal dialog is asking: the few text lines just above its option 1
+    ("Do you want to make this edit to live.py?"). Without it the chat shows bare buttons and you
+    have to open the terminal anyway to learn what they answer."""
+    if not pane: return None
+    rows = [_unbox(l) for l in screen(pane, lines).splitlines()]
+    first = None
+    for i, l in enumerate(rows):
+        m = _OPTLINE.match(l)
+        if m and int(m.group(3)) == 1: first = i
+    if first is None: return None
+    out = []
+    for l in reversed(rows[:first]):
+        t = l.strip().strip(_BORDER).strip()
+        if not t:
+            if out: break
+            continue
+        if _TABS.match(l): break
+        out.insert(0, t)
+        if len(out) == 3: break
+    return "\n".join(out) or None
 
 def tabs(pane, lines=40):
     """The `← Roadmap | PR 481 | ✓ Submit →` strip an AskUserQuestion draws above its options, so the
@@ -180,6 +242,7 @@ def answer(pane, n, tries=16):
 
 _cache = {"at": 0.0, "val": [], "roster_at": 0.0}
 _CACHE_TTL = 2.0
+_lock = __import__("threading").Lock()
 _ROSTER_EVERY = 15.0
 
 def server_up():
@@ -227,8 +290,20 @@ def mem():
     return out
 
 def list_live(fresh=False):
-    """Live sessions, cached for 2s: the UI polls this several times a second across open rows."""
+    """Live sessions, cached for 2s: the UI polls this several times a second across open rows.
+    Past 2s, a background thread rebuilds it and every caller keeps the last list instead of waiting on
+    tmux; a dozen open chats used to pile up behind that and stall a dropped screenshot."""
     if not fresh and time.time() - _cache["at"] < _CACHE_TTL: return list(_cache["val"])
+    if not fresh and _cache["val"]:
+        if _lock.acquire(blocking=False): __import__("threading").Thread(target=_rebuild_bg, daemon=True).start()
+        return list(_cache["val"])
+    with _lock: return _build_live()
+
+def _rebuild_bg():
+    try: _build_live()
+    finally: _lock.release()
+
+def _build_live():
     out = []; titles = _titles()
     for f in glob.glob(SESS):
         try: d = json.load(open(f))
@@ -264,11 +339,12 @@ def send(pane, text):
 def press(pane, key="Enter"):
     subprocess.run(["tmux", "send-keys", "-t", pane, key], check=True, timeout=5)
 
+@_by_file
 def last_tool(sid):
     """The most recent ⚙ tool line, so the UI can say what Claude is doing while it is busy."""
     p = _transcript_path(sid)
     if not p: return None
-    for l in reversed(open(p, errors="replace").readlines()[-120:]):
+    for l in reversed(_tail(p, 120)):
         try: d = json.loads(l)
         except Exception: continue
         if d.get("type") != "assistant": continue

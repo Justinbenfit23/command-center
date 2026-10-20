@@ -50,6 +50,12 @@ CREATE TABLE IF NOT EXISTS roadmap (
   remote_at TEXT,              -- updated_at of the artifact row we last reconciled against
   deleted INTEGER NOT NULL DEFAULT 0
 );
+-- Roadmap tab, PRD grain (GTMP-1288). Justin's own fields per in-flight PRD: his title, his notes, which big
+-- rock it sits under. Keyed by the Shipyard doc id, so the same PRD reached from the board or a card is one row.
+CREATE TABLE IF NOT EXISTS prd_rows (
+  doc_id TEXT PRIMARY KEY, title TEXT, notes TEXT DEFAULT '', rock_id TEXT, manual INTEGER NOT NULL DEFAULT 0,
+  hidden INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL, notes_at TEXT
+);
 CREATE INDEX IF NOT EXISTS roadmap_assignee ON roadmap(assignee, team_view, deleted);
 """
 
@@ -79,6 +85,9 @@ def _connect():
     if "live_sid" not in cols: c.execute("ALTER TABLE items ADD COLUMN live_sid TEXT")
     for col, ddl in (("context", "TEXT DEFAULT ''"), ("granola", "TEXT DEFAULT ''"), ("model", "TEXT"), ("slack_context", "TEXT"), ("cwd", "TEXT"), ("live_pane", "TEXT"), ("pending_seed", "TEXT"), ("lift", "TEXT"), ("attachments", "TEXT DEFAULT '[]'")):
         if col not in cols: c.execute(f"ALTER TABLE items ADD COLUMN {col} {ddl}")
+    rcols = [r[1] for r in c.execute("PRAGMA table_info(rock_map)")]
+    if "workstream" not in rcols: c.execute("ALTER TABLE rock_map ADD COLUMN workstream TEXT")
+    if "manual" not in rcols: c.execute("ALTER TABLE rock_map ADD COLUMN manual INTEGER NOT NULL DEFAULT 0")
     return c
 
 def now(): return datetime.now().isoformat(timespec="seconds")
@@ -143,6 +152,13 @@ def upsert_prs(items):
 def prs_by_author(author):
     with conn() as c: return rows(c.execute("SELECT * FROM prs WHERE author=? AND state='open' ORDER BY updated_at DESC", (author,)))
 
+def get_setting(k):
+    with conn() as c: r = c.execute("SELECT v FROM settings WHERE k=?", (k,)).fetchone()
+    return r["v"] if r else None
+
+def set_setting(k, v):
+    with conn() as c: c.execute("INSERT INTO settings(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v", (k, v))
+
 def set_daily(login, day_counts, repos):
     with conn() as c:
         c.execute("DELETE FROM team_daily WHERE login=?", (login,))
@@ -155,8 +171,15 @@ def get_daily(login):
         m = c.execute("SELECT repos,fetched_at FROM team_meta WHERE login=?", (login,)).fetchone()
     return days, (json.loads(m["repos"]) if m else []), (m["fetched_at"] if m else None)
 
-def set_rock(task_key, rock_id, rationale):
-    with conn() as c: c.execute("INSERT OR REPLACE INTO rock_map VALUES(?,?,?,?)", (task_key, rock_id, rationale, now()))
+def set_rock(task_key, rock_id, rationale, workstream=None, manual=False):
+    """manual=True is a remap from the UI: it sticks through later Updates. A manual remap with no
+    workstream keeps the one Claude gave."""
+    with conn() as c:
+        old = c.execute("SELECT workstream, rationale FROM rock_map WHERE task_key=?", (task_key,)).fetchone()
+        ws = workstream if workstream is not None else (old["workstream"] if old else None)
+        why = rationale or (old["rationale"] if old and manual else "")
+        c.execute("INSERT OR REPLACE INTO rock_map(task_key,rock_id,rationale,updated_at,workstream,manual) VALUES(?,?,?,?,?,?)",
+                  (task_key, rock_id, why, now(), ws, 1 if manual else 0))
 
 def rock_map():
     with conn() as c: return {r["task_key"]: dict(r) for r in c.execute("SELECT * FROM rock_map")}
@@ -274,3 +297,16 @@ def roadmap_delete(key, by="justin"):
 
 def roadmap_mark_synced(key, remote_at):
     with conn() as c: c.execute("UPDATE roadmap SET remote_at=? WHERE task_key=?", (remote_at, key))
+
+def prd_rows():
+    with conn() as c: return {r["doc_id"]: dict(r) for r in c.execute("SELECT * FROM prd_rows")}
+
+def prd_set(doc_id, **f):
+    """Upsert Justin's fields on one PRD row. Only the keys passed change."""
+    f = {k: v for k, v in f.items() if k in ("title", "notes", "rock_id", "manual", "hidden")}
+    f["updated_at"] = now()
+    if "notes" in f: f["notes_at"] = f["updated_at"]
+    with conn() as c:
+        c.execute("INSERT OR IGNORE INTO prd_rows(doc_id, updated_at) VALUES(?,?)", (doc_id, f["updated_at"]))
+        c.execute(f"UPDATE prd_rows SET {','.join(k+'=?' for k in f)} WHERE doc_id=?", [*f.values(), doc_id])
+    return prd_rows().get(doc_id)

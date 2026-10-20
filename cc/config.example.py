@@ -63,5 +63,7 @@ RADAR_HOST = "dashboards.example.com"
 SLACK_HOST = "example.slack.com"
 TEAM_NAME = "Your Team"
 
-# The claude.ai artifact the EPD Rolling Roadmap lives in (Team tab mirrors it)
-EPD_ARTIFACT_URL = "https://claude.ai/artifact/your-roadmap-artifact-id"
+# The EPD Rolling Roadmap board (a Shipyard HTML doc) and the CLI that is the only way to change it
+EPD_BOARD_URL = "https://tickets.example.com/docs/your-board-doc-id/render"
+EPD_ARTIFACT_URL = EPD_BOARD_URL
+ROADMAP_CLI = os.path.expanduser("~/work/agent-system/playbooks/epd-rolling-roadmap/roadmap.py")

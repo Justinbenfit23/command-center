@@ -4,7 +4,7 @@ big-rocks roadmap. Stdlib only. Run: python3 server.py -> http://127.0.0.1:8765 
 import json, os, sys, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
-from cc import db, slack, triage, github, sessions, shipyard, roadmap, live, usage, epd, claude_sessions as cs
+from cc import models, db, slack, triage, github, sessions, shipyard, roadmap, live, usage, epd, audit, claude_sessions as cs
 from cc.config import ME, ME_UID, TEAM, TEAM_ID, TEAM_NAME, GH_ORG, SHIPYARD_HOST, ACCEL_DIR, HANDOFF_TEMPLATE, EPD_ARTIFACT_URL
 
 def _intake_pg(item, meta):
@@ -41,6 +41,7 @@ def items_with_live(status="open", sort="lift"):
         if not it["live"] and it.get("model") == "cursor":
             cbs = cb.get_status(it["id"])
             it["live"] = {"status": cbs["status"], "pane": None, "kind": "cursor"}
+        it["model_label"] = models.label(models.of_session(it.get("live_sid")))
         if x and x.get("title") and it.get("source_type") == "live" and it["title"] in (x.get("name"), "Claude session"): 
             db.update_item(it["id"], title=x["title"]); it["title"] = x["title"]
     return items
@@ -49,9 +50,12 @@ def items_with_live_one(iid):
     it = db.get_item(iid); x = _live_index().get(it.get("live_sid") or "")
     it["live"] = {"status": x["status"], "pane": x["pane"], "kind": x["kind"]} if x else None
     it["todos"] = db.todos(iid)
+    it["model_label"] = models.label(models.of_session(it.get("live_sid")))   # what this session actually ran last
     return it
 
-MODELS = {"fable": "claude-fable-5-1", "opus": "claude-opus-5", "sonnet": "claude-sonnet-5", "cursor": "cursor"}
+# Aliases, not pinned versions: the CLI resolves "opus"/"sonnet"/"fable" to the newest
+# model in each family, so a new release is picked up with no edit here.
+MODELS = {"fable": "fable", "opus": "opus", "sonnet": "sonnet", "cursor": "cursor"}
 # cursor-model items bypass tmux entirely: messages flow through cc/cursor_bridge.py's filesystem bridge,
 # picked up by a Cursor IDE polling loop. This uses Cursor credits, not Claude Code credits.
 from cc import cursor_bridge as cb
@@ -225,19 +229,58 @@ def pick_assignee(it):
     print(f"pick_assignee: {out[:80]!r} -> {hits}", file=sys.stderr, flush=True)
     return hits[0] if len(hits) == 1 else None
 
+class _HandoffFields(dict):
+    """A placeholder the template asks for but the code does not supply must not cost us the DM.
+    HANDOFF_TEMPLATE is config a human edits; an unknown {field} renders empty instead of raising
+    KeyError, which is what silently swallowed the GTMP-1263 handoff on 2026-10-13."""
+    def __missing__(self, key):
+        print(f"HANDOFF_TEMPLATE has no value for {{{key}}} — rendered empty", file=sys.stderr, flush=True)
+        return ""
+
 def _handoff_notify(iid, assignee):
     """Move the ticket to the assignee and Slack them the handoff. Runs after dbr done so the ticket key
-    the session produced is on the card. A failed DM becomes a to-do on the card instead of vanishing."""
+    the session produced is on the card. A failed DM becomes a to-do on the card instead of vanishing,
+    and nothing in here may raise: the caller still has a session to end after us."""
+    try:
+        return _handoff_notify_inner(iid, assignee)
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"[:200]
+        try: db.add_todos(iid, [f"Handoff to {TEAM.get(assignee, (assignee,))[0]} crashed ({err}). Send it by hand."], source="cc")
+        except Exception: pass
+        print(f"handoff crashed for item {iid}: {err}", file=sys.stderr, flush=True)
+        return err
+
+def _handoff_notify_inner(iid, assignee):
     it = db.get_item(iid)
     if not it: return None
     name, uid, slack_uid = TEAM[assignee]
     if it.get("shipyard_key"):
         try: shipyard.call("update_task", task_id=it["shipyard_key"], assignee_id=uid, status="todo")
         except Exception as e: print(f"shipyard assign failed: {e}", file=sys.stderr, flush=True)
+        # The roadmap and the Team tab work at the PRD level: shipyard.prd_url() reads metadata.plan, else a
+        # /d/ link in the task DESCRIPTION. A PRD link that lives only on this card, or only in a task note,
+        # leaves the task "in Shipyard" and off the assignee's Team tab — that is what happened to GTMP-1263.
+        # The MCP update_task tool takes no metadata argument, so the description is the only writable home.
+        if it.get("prd_url"):
+            try:
+                rec = shipyard.call("get_task", task_id=it["shipyard_key"]) or {}
+                desc = (rec.get("description") or "") if isinstance(rec, dict) else ""
+                if it["prd_url"] not in desc:
+                    shipyard.call("update_task", task_id=it["shipyard_key"],
+                                  description=f"**PRD:** {it['prd_url']}\n\n{desc}".strip())
+            except Exception as e: print(f"shipyard PRD-link write failed: {e}", file=sys.stderr, flush=True)
     links = []
     if it.get("prd_url"): links.append("PRD: " + it["prd_url"])
     if it.get("shipyard_key"): links.append(f"Ticket: https://{SHIPYARD_HOST}/t/" + it["shipyard_key"])
-    text = HANDOFF_TEMPLATE.format(title=it["title"][:200], links="\n".join(links) or "No PRD yet, I will send one.")
+    no_prd = "No PRD yet, I will send one."
+    text = HANDOFF_TEMPLATE.format_map(_HandoffFields(
+        title=it["title"][:200],
+        links="\n".join(links) or no_prd,
+        prd_url=it.get("prd_url") or no_prd,
+        ticket_url=(f"https://{SHIPYARD_HOST}/t/" + it["shipyard_key"]) if it.get("shipyard_key") else "",
+        key=it.get("shipyard_key") or "",
+        name=name,
+    ))
     try: sent = slack.dm(slack_uid, text); err = (sent or {}).get("error") if isinstance(sent, dict) else None
     except Exception as e: err = str(e)[:200]
     if err:
@@ -281,13 +324,13 @@ def _claim_after_dbr_inner(iid, assignee, wait):
         keys = sorted(set(cs.KEY.findall(text)), key=lambda k: int(k.split("-")[1]))
         key = keys[-1] if keys else (db.get_item(iid) or {}).get("shipyard_key")
         if key: db.update_item(iid, shipyard_key=key)
-        _handoff_notify(iid, assignee)
-        _end_session(iid, "handoff")
+        try: _handoff_notify(iid, assignee)
+        finally: _end_session(iid, "handoff")
         return
     # dbr done never went idle inside the window. The card is handed off and archived either way, so
     # notify anyway and reclaim the memory rather than leaving an orphan running all day.
-    _handoff_notify(iid, assignee)
-    _end_session(iid, "handoff timeout")
+    try: _handoff_notify(iid, assignee)
+    finally: _end_session(iid, "handoff timeout")
 
 def _watcher():
     """Every 2s: finish any session that registered after we stopped waiting, and answer trust prompts on the way."""
@@ -536,33 +579,76 @@ def sync_epd(force=False):
         _SYNC["running"] = False
     return _SYNC["last"]
 
+def prd_patch(doc_id, body):
+    """Justin's fields on one Roadmap PRD row. A rock change is pinned (Update never re-files it).
+    `append` adds a dated line under the notes; that is what a Claude notes session sends."""
+    f = {k: body[k] for k in ("title", "notes", "rock_id", "hidden") if k in body}
+    if "rock_id" in f: f["manual"] = 1
+    if body.get("append"):
+        cur = (db.prd_rows().get(doc_id) or {}).get("notes") or ""
+        f["notes"] = (cur.rstrip() + "\n\n" if cur.strip() else "") + f"{db.now()[:10]}: {body['append'].strip()}"
+    return db.prd_set(doc_id, **f)
+
+_AUDIT = {"running": False, "at": 0.0, "error": ""}
+
+def update_everything():
+    """The team tab's Update button. Re-reads GitHub commits, every ticket's attached pull requests,
+    LaunchDarkly, and the roadmap sync, then stores one dated blob so the tab can say how fresh it is.
+    Single-flight: mashing the button costs one run."""
+    if _AUDIT["running"]: return {"running": True, **audit.last()}
+    _AUDIT["running"] = True; _AUDIT["at"] = time.time(); _AUDIT["error"] = ""
+    try:
+        blob = audit.run()
+        sync_epd(force=True)
+        return blob
+    except Exception as e:
+        _AUDIT["error"] = str(e)[:200]
+        print(f"team update failed: {e}", file=sys.stderr, flush=True)
+        return {"error": _AUDIT["error"], **audit.last()}
+    finally:
+        _AUDIT["running"] = False
+
+# A person's card counts projects, not tickets: one row on the EPD board is one project, and that is
+# the level the roadmap and this tab both plan at. Nobody runs six projects at once and does them justice,
+# so six is where the card turns red. The band is a prompt to look, not a measurement.
+BAND = lambda n: "available" if n < 3 else "normal" if n < 6 else "loaded"
+
 def team_view(refresh=False):
     # Opening the team tab is the trigger: kick the reconcile off in the background and serve the
     # cards immediately. The rows the user sees are this run's inputs; the next open shows its output.
     threading.Thread(target=sync_epd, daemon=True).start()
-    if refresh: github.refresh_team()
+    if refresh: update_everything()
+    aud = audit.last()
+    by_id = {r.get("id"): r for r in aud.get("rows") or []}
+    board = {}
+    for p in epd.rows():            # the board's own live rows, Done already dropped
+        board.setdefault(p.get("assignee") or "unassigned", []).append(p)
     out = []
     for login, (name, uid, _slack) in TEAM.items():
+        slug = epd.SLUG_BY_LOGIN.get(login, login.split("-")[0])
         c = github.team_card(login)
-        try:
-            mine = [shipyard.enrich(t) for t in shipyard.open_tasks(assignee_uid=uid, reporter_uid=ME_UID)]
-            allt = [shipyard.enrich(t) for t in shipyard.open_tasks(assignee_uid=uid)]
-            mk = {t["key"] for t in mine}; others = [t for t in allt if t["key"] not in mk]
-        except Exception as e:
-            mine, others = [], [{"key": "—", "title": f"shipyard unavailable: {e}"[:80], "status": "", "complexity": "", "progress": 0}]
-        # Backlog is a wish list, not work in hand. Load counts only tickets that are actually moving.
-        active = [t for t in mine + others if t.get("status") in ("todo", "in_progress", "in_review")]
-        load = len(active) + c["week"] / 5
-        handed = [{"key": (i.get("shipyard_key") or "—"), "title": i["title"][:90],
-                   "url": i.get("prd_url") or ((f"https://{SHIPYARD_HOST}/t/" + i["shipyard_key"]) if i.get("shipyard_key") else "#"),
-                   "status": "handed off", "complexity": {"light": "S", "medium": "M", "heavy": "L"}.get(i.get("lift") or "", ""),
-                   "progress": 5, "prd_url": i.get("prd_url"), "at": i.get("updated_at")}
+        series, week, fortnight = audit.shipped_series(slug)
+        projects = []
+        for p in board.get(slug, []):
+            a = by_id.get(p.get("id")) or {}
+            projects.append({"id": p.get("id"), "title": p.get("title") or "", "phase": p.get("phase"),
+                             "delivery": p.get("delivery"), "progress": p.get("progress") or 0,
+                             "link": p.get("link") or "#", "link_kind": p.get("link_kind"),
+                             "ticket": (p.get("tickets") or [None])[0], "tickets": p.get("tickets") or [],
+                             "rank": p.get("rank"), "team_view": p.get("team_view"),
+                             "state": a.get("state") or "", "why": a.get("why") or "",
+                             "flags": a.get("flags") or [], "from_me": bool(a.get("from_me"))})
+        mine = [p for p in projects if p["from_me"]]
+        others = [p for p in projects if not p["from_me"]]
+        handed = [{"id": (i.get("shipyard_key") or "—"), "title": i["title"][:90],
+                   "link": i.get("prd_url") or ((f"https://{SHIPYARD_HOST}/t/" + i["shipyard_key"]) if i.get("shipyard_key") else "#"),
+                   "phase": "handed off", "delivery": "", "progress": 5, "state": "", "flags": []}
                   for i in db.list_items("all") if i.get("assignee") == login and i.get("owner") == "team"]
-        c.update({"handed_off": handed, "tickets_from_me": mine, "tickets_from_others": others, "active_tickets": len(active),
-                  "backlog_tickets": len(mine) + len(others) - len(active), "load": round(load, 1),
-                  "bandwidth": "available" if load < 4 else "normal" if load < 9 else "loaded"})
+        c.update({"slug": slug, "handed_off": handed, "projects_from_me": mine, "projects_from_others": others,
+                  "active_projects": len(projects), "shipped_week": week, "shipped_14d": fortnight,
+                  "series": series, "load": len(projects), "bandwidth": BAND(len(projects))})
         out.append(c)
-    return out
+    return {"cards": out, "audit": {k: v for k, v in aud.items() if k != "rows"}, "updating": _AUDIT["running"]}
 
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
@@ -575,7 +661,7 @@ class H(BaseHTTPRequestHandler):
         p = urllib.parse.urlparse(self.path); path, qs = p.path, urllib.parse.parse_qs(p.query); seg = path.strip("/").split("/")
         try:
             if path == "/": return self._send(200, open(os.path.join(HERE, "static", "index.html"), "rb").read(), "text/html; charset=utf-8")
-            if path == "/api/config": return self._send(200, {"shipyard": SHIPYARD_HOST, "gh_org": GH_ORG, "team_name": TEAM_NAME, "roster": [{"login": k, "name": v[0]} for k, v in TEAM.items()]})
+            if path == "/api/config": return self._send(200, {"shipyard": SHIPYARD_HOST, "gh_org": GH_ORG, "team_name": TEAM_NAME, "roster": [{"login": k, "name": v[0]} for k, v in TEAM.items()], "models": models.newest()})
             if path == "/api/team/roster": return self._send(200, [{"login": k, "name": v[0]} for k, v in TEAM.items()])
             if path == "/api/items": return self._send(200, items_with_live("archived" if "archived" in qs else "open", (qs.get("sort") or ["lift"])[0]))
             if path == "/api/live": return self._send(200, live.list_live())
@@ -609,9 +695,12 @@ class H(BaseHTTPRequestHandler):
                     pane = lv.get("pane") if lv else None
                     # The transcript says a question was ASKED; the screen says what you can press. Both go
                     # down, so the chat can render real buttons instead of telling you to open a terminal.
-                    opts = live.options(pane) if (pane and (q or lv["status"] != "busy")) else []
+                    # Options only when something is really asking: an open AskUserQuestion, or a ❯-cursor
+                    # dialog on screen. An idle pane whose last reply has a numbered list is not a question.
+                    dlg = live.dialog(pane) if (pane and not q) else None
+                    opts = live.options(pane) if (pane and (q or dlg)) else []
                     return self._send(200, {"messages": msgs, "status": lv["status"] if lv else "gone", "last_tool": live.last_tool(it["live_sid"]) if lv and lv["status"] == "busy" else None,
-                                            "question": q, "dialog": None if (q or not lv) else live.dialog(pane),
+                                            "question": q, "dialog": dlg, "prompt": live.dialog_prompt(pane) if opts else None,
                                             "options": opts, "tabs": live.tabs(pane) if opts else None})
                 return self._send(200, {"messages": [{"role": m["role"], "text": m["content"]} for m in db.messages(seg[2])], "status": None})
             if len(seg) == 4 and seg[:2] == ["api", "items"] and seg[3] == "screen":
@@ -630,10 +719,11 @@ class H(BaseHTTPRequestHandler):
                     for pr in prs: pr.update(github.enrich_pr(pr["url"]))
                 return self._send(200, prs)
             if path == "/api/team": return self._send(200, team_view(refresh="refresh" in qs))
+            if path == "/api/team/audit": return self._send(200, update_everything() if "run" in qs else {"running": _AUDIT["running"], **audit.last()})
             if path == "/api/usage":
                 try: return self._send(200, usage.fetch(refresh="refresh" in qs))
                 except Exception as e: return self._send(200, {"error": str(e)[:300]})
-            if path == "/api/roadmap": return self._send(200, roadmap.view(auto_map="map" in qs))
+            if path == "/api/roadmap": return self._send(200, roadmap.view())
             if path == "/api/epd":
                 if "refresh" in qs:
                     try: epd.pull()
@@ -683,7 +773,17 @@ class H(BaseHTTPRequestHandler):
                 ids = db.add_todos(it["id"], body.get("items") or body.get("text") or [], source=body.get("source") or "claude")
                 return self._send(201, {"item": it["id"], "added": ids, "todos": db.todos(it["id"])})
             if len(seg) == 4 and seg[:2] == ["api", "items"]: return self._send(200, action(seg[2], seg[3], body))
-            if path == "/api/roadmap/map": return self._send(200, {"mapped": roadmap.classify(roadmap.open_team_tasks())})
+            if path in ("/api/roadmap/map", "/api/roadmap/update"): return self._send(200, roadmap.start_refresh())
+            if len(seg) == 5 and seg[:3] == ["api", "roadmap", "prd"] and seg[4] == "claude":
+                r = (roadmap.view()); p_ = next((x for k in r["rocks"] for x in k["prds"] if x["doc_id"] == seg[3]), None)
+                if not p_: return self._send(404, {"error": "no PRD in flight with that id"})
+                note = (f"Roadmap notes for the PRD \"{p_['title']}\": {p_['url']}\n"
+                        "Read the PRD and the Shipyard tickets under it, then write where it stands in 2-4 plain lines: what shipped, "
+                        "what is in progress, what is blocked and on whom. Save it onto the Roadmap tab with:\n"
+                        f"curl -s -X PATCH http://127.0.0.1:8765/api/roadmap/prd/{seg[3]} -H 'Content-Type: application/json' -d '{{\"append\": \"<your lines>\"}}'\n"
+                        "append adds a dated entry under my existing notes; never send \"notes\", that would replace them."
+                        + (f"\nMy notes so far:\n{p_['notes']}" if p_["notes"] else ""))
+                return self._send(201, create_item({"text": f"Roadmap notes: {p_['title'][:80]}", "note": note, "start": True, "model": body.get("model") or "opus"}))
             if path == "/api/prs/monitor":
                 url = body.get("url", ""); m = __import__("re").match(rf"https://github\.com/{GH_ORG}/([\w.-]+)/pull/(\d+)", url)
                 if not m: return self._send(400, {"error": f"not a {GH_ORG} PR url"})
@@ -743,8 +843,8 @@ class H(BaseHTTPRequestHandler):
                 f = {k: body[k] for k in ("text", "done", "pos") if k in body}
                 r = db.update_todo(seg[2], **f) if f else None
                 return self._send(200, r) if r else self._send(404, {"error": "no such to-do"})
-            if len(seg) == 4 and seg[:2] == ["api", "roadmap"] and seg[2] == "map":
-                db.set_rock(seg[3], body.get("rock_id", "none"), body.get("rationale", "")); return self._send(200, {"ok": True})
+            if len(seg) == 4 and seg[:3] == ["api", "roadmap", "prd"]:
+                return self._send(200, prd_patch(seg[3], body))
             return self._send(404, {"error": "not found"})
         except Exception as e:
             return self._send(500, {"error": str(e)[:400]})

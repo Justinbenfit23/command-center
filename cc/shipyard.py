@@ -57,25 +57,39 @@ PROGRESS = {"backlog": 0, "todo": 10, "in_progress": 50, "in_review": 85, "done"
 
 import re as _re
 _DOC = None
-_prd_cache = {}   # key -> (updated_at, prd_url)
+_full_cache = {}   # key -> (updated_at, full task record)
+
+def full(task):
+    """The whole task record behind a list row, fetched once and re-fetched only when updated_at moves.
+    The list rows carry no description, metadata or assignee, so anything beyond status needs this."""
+    key = task.get("key")
+    if not key: return None
+    hit = _full_cache.get(key)
+    if hit and hit[0] == task.get("updated_at"): return hit[1]
+    try: rec = call("get_task", task_id=key, include=[])
+    except Exception: return hit[1] if hit else None
+    if not isinstance(rec, dict) or rec.get("error"): return hit[1] if hit else None
+    _full_cache[key] = (task.get("updated_at"), rec)
+    return rec
+
+def task_prs(task):
+    """The pull requests Shipyard has already attached to this ticket. Shipyard makes the link itself
+    whenever a PR title carries the ticket key, so this costs nothing to maintain."""
+    rec = full(task) or {}
+    return [p for p in ((rec.get("metadata") or {}).get("prs") or []) if p.get("url")]
 
 def prd_url(task):
     """The PRD behind a task: metadata.plan (set by the PRD button / handoff), else the first Shipyard document
-    link in the description. One get_task per task, re-fetched only when the task's updated_at moves."""
+    link in the description."""
     global _DOC
-    key = task.get("key")
-    if not key: return None
-    hit = _prd_cache.get(key)
-    if hit and hit[0] == task.get("updated_at"): return hit[1]
-    try: full = call("get_task", task_id=key, include=[])
-    except Exception: return hit[1] if hit else None
+    rec = full(task)
+    if rec is None: return None
     if _DOC is None:
         from .config import SHIPYARD_HOST
         _DOC = _re.compile(rf"https://{_re.escape(SHIPYARD_HOST)}/d/[0-9a-f-]{{36}}")
-    url = ((full.get("metadata") or {}).get("plan") or "").strip() or None
+    url = ((rec.get("metadata") or {}).get("plan") or "").strip() or None
     if not url:
-        m = _DOC.search(full.get("description") or ""); url = m.group(0) if m else None
-    _prd_cache[key] = (task.get("updated_at"), url)
+        m = _DOC.search(rec.get("description") or ""); url = m.group(0) if m else None
     return url
 
 def enrich(task):

@@ -1,120 +1,75 @@
-"""The EPD Rolling Roadmap, mirrored between the team tab and the claude.ai artifact.
+"""The EPD Rolling Roadmap, as the team tab sees it.
 
-Shipyard is the master for what a project IS — title, assignee, status, link. The PM fields on top of
-that (phase, delivery, progress, rank, rock, team_view, week_of) have no home in Shipyard's API, so they
-live in the local `roadmap` table keyed by the same Shipyard key.
-
-The artifact's `projects` collection holds exactly the same rows. This server has no credentials to
-claude.ai, so it cannot write that collection itself — a Claude run does, every 15 minutes, by calling
-`export()` here for what we believe and `merge_remote()` with what the artifact says. Reconciliation is
-last-write-wins per row on `updated_at`, which both sides stamp.
+Since GTMP-1181 the roadmap is one HTML file mastered in Shipyard, and roadmap.py (the CLI embedded in
+that file) is the only thing that changes it. This module shells out to that CLI: `rows()` reads the
+working copy, `set_field()` runs one op with --push, `sync_all()` runs `sync --owner` for every owner
+and pushes once. No local mirror, no reconcile, no Claude in the loop.
 """
-import json
-from . import db, shipyard
-from .config import TEAM, ME, ME_UID, SHIPYARD_HOST
+import json, os, re, subprocess, sys
+from .config import TEAM, ME, ME_UID, ROADMAP_CLI, EPD_BOARD_URL
 
-# The artifact writes an assignee slug, not a GitHub login. Keep the two vocabularies pinned together
-# here so neither side has to guess.
 SLUG_BY_LOGIN = {login: login.split("-")[0] for login in TEAM}
-LOGIN_BY_SLUG = {v: k for k, v in SLUG_BY_LOGIN.items()}
-SLUG_BY_UID = {uid: SLUG_BY_LOGIN[login] for login, (_n, uid, _s) in TEAM.items()}
-SLUG_BY_UID[ME_UID] = "justin"
-LOGIN_BY_SLUG["justin"] = ME
-
-PHASES = ("Discovery & Definition", "Development", "Evaluation", "Launch", "Complete")
-DELIVERY = ("Not Started", "On Time", "At Risk", "Late", "Shipped")
-PHASE_BY_STATUS = {"backlog": "Discovery & Definition", "todo": "Discovery & Definition",
-                   "in_progress": "Development", "in_review": "Evaluation", "done": "Complete"}
+SLUG_BY_LOGIN[ME] = "justin"
+PHASES = ("Discovery & Definition", "Design Production", "Technical Discovery", "Development", "Evaluation", "Done", "On Hold")
+DELIVERY = ("Not Started", "On Time", "Delayed", "On Hold", "Punted")
+WORKING = os.path.join(os.path.dirname(ROADMAP_CLI), "epd-rolling-roadmaps.html")
+_END = "</scr" + "ipt>"
+_DATA = re.compile(r'<script type="application/json" id="roadmap-data">\n(.*?)\n' + _END, re.S)
 
 
-def _link(key): return f"https://{SHIPYARD_HOST}/t/{key}"
-
-
-def refresh_from_shipyard():
-    """Pull every open team task and make sure each one has a roadmap row. Only fills fields the row does
-    not already carry — a phase Justin or the team set by hand is never overwritten by the ticket status."""
-    seen = []
-    for uid in list(SLUG_BY_UID):
-        try: tasks = shipyard.open_tasks(assignee_uid=uid)
-        except Exception: continue
-        for t in tasks:
-            key = t.get("key")
-            if not key or key in seen: continue
-            seen.append(key)
-            cur = db.roadmap_row(key)
-            prd = shipyard.prd_url(t)
-            fields = {"title": t.get("title"), "link": prd or _link(key), "link_kind": "prd" if prd else "ticket",
-                      "assignee": SLUG_BY_UID[uid], "tickets": [key]}
-            if not cur:
-                fields |= {"phase": PHASE_BY_STATUS.get(t.get("status")), "delivery": "Not Started",
-                           "progress": shipyard.PROGRESS.get(t.get("status"), 0), "team_view": True,
-                           "rock_id": (db.rock_map().get(key) or {}).get("rock_id")}
-            db.roadmap_upsert(key, by="shipyard", **fields)
-    return seen
-
-
-def rows(team_view_only=False):
-    out = [r for r in db.roadmap_rows() if not team_view_only or r["team_view"]]
+def cli(*args, by="justin", timeout=180):
+    r = subprocess.run([sys.executable, ROADMAP_CLI, "--by", by, *args], capture_output=True, text=True, timeout=timeout)
+    out = (r.stdout + r.stderr).strip()
+    if r.returncode:
+        raise RuntimeError(out[-400:] or f"roadmap.py exit {r.returncode}")
     return out
 
 
-def as_artifact(r):
-    """One local row in the shape the artifact's `projects` collection uses."""
-    return {"assignee": r.get("assignee"), "phase": r.get("phase"), "delivery": r.get("delivery"),
-            "progress": r.get("progress"), "rank": r.get("rank"), "rock_id": r.get("rock_id"),
-            "rock_note": r.get("rock_note") or "", "team_view": bool(r.get("team_view")),
-            "summary": r.get("summary") or "", "week_of": r.get("week_of"),
-            "start_date": r.get("start_date"), "target_date": r.get("target_date"),
-            "title": r.get("title"), "link": r.get("link"), "link_kind": r.get("link_kind") or "ticket",
-            "tickets": r.get("tickets") or [r["task_key"]],
-            "updated_at": r.get("updated_at"), "updated_by": r.get("updated_by") or "justin"}
+def board():
+    """The data block of the working copy (whatever the last pull or push left there)."""
+    if not os.path.exists(WORKING):
+        cli("pull")
+    m = _DATA.search(open(WORKING, encoding="utf-8").read())
+    return json.loads(m.group(1)) if m else {"projects": [], "revision": None}
 
 
-def export():
-    """What this side believes, for the sync to compare against the artifact."""
-    live = [r for r in db.roadmap_rows(include_deleted=True) if not r["deleted"]]
-    gone = [r["task_key"] for r in db.roadmap_rows(include_deleted=True) if r["deleted"]]
-    return {"projects": {r["task_key"]: as_artifact(r) for r in live}, "deleted": gone,
-            "synced": {r["task_key"]: r.get("remote_at") for r in live}}
+def pull():
+    return cli("pull")
 
 
-def merge_remote(remote):
-    """Take the artifact's `projects` rows and reconcile. `remote` is {key: {..., updated_at, updated_by}}.
-
-    A remote row wins when its `updated_at` is newer than ours; otherwise ours stands and the sync pushes
-    it back up. Returns what the caller must now write to the artifact."""
-    push, pulled, conflicts = {}, [], []
-    for key, rem in (remote or {}).items():
-        if not isinstance(rem, dict): continue
-        cur = db.roadmap_row(key)
-        r_at = (rem.get("updated_at") or "")[:19]
-        if cur and cur.get("deleted"):
-            continue                       # we tombstoned it; the sync deletes it up there
-        if not cur:
-            db.roadmap_upsert(key, by=rem.get("updated_by") or "team", at=rem.get("updated_at"),
-                              remote_at=r_at, **{k: rem.get(k) for k in db.ROADMAP_FIELDS if k in rem})
-            pulled.append(key); continue
-        l_at = (cur.get("updated_at") or "")[:19]
-        if r_at > l_at:
-            db.roadmap_upsert(key, by=rem.get("updated_by") or "team", at=rem.get("updated_at"),
-                              remote_at=r_at, **{k: rem.get(k) for k in db.ROADMAP_FIELDS if k in rem})
-            pulled.append(key)
-        elif l_at > r_at:
-            push[key] = as_artifact(cur)
-            if r_at and r_at != (cur.get("remote_at") or ""): conflicts.append(key)
-        else:
-            db.roadmap_mark_synced(key, r_at)
-    # anything we hold that the artifact has never seen
-    for r in db.roadmap_rows():
-        if r["task_key"] not in (remote or {}): push[r["task_key"]] = as_artifact(r)
-    delete = [r["task_key"] for r in db.roadmap_rows(include_deleted=True)
-              if r["deleted"] and r["task_key"] in (remote or {})]
-    return {"push": push, "delete": delete, "pulled": pulled, "conflicts": conflicts}
+def rows(team_view_only=False):
+    out = []
+    for t in board().get("projects", []):
+        if t.get("phase") == "Done" or (team_view_only and not t.get("team_view")):
+            continue
+        out.append({**t, "task_key": t["id"], "ticket": (t.get("tickets") or [None])[0]})
+    return out
 
 
 def top_three():
-    """The front-page table: each owner's three ranked projects."""
     by = {}
     for r in rows(team_view_only=True):
-        if r.get("rank") in (1, 2, 3): by.setdefault(r["assignee"] or "unassigned", []).append(r)
-    return {k: sorted(v, key=lambda r: r["rank"])[:3] for k, v in by.items()}
+        by.setdefault(r.get("assignee") or "unassigned", []).append(r)
+    return {k: sorted(v, key=lambda r: r.get("rank") or 99)[:3] for k, v in by.items()}
+
+
+def set_field(pid, field, value, by="justin"):
+    """One edit from the team tab, straight onto the master."""
+    if field == "team_view":
+        return cli("top3", pid, *([] if value else ["--off"]), "--push", by=by)
+    if field == "rank":
+        return cli("top3", pid, *(["--rank", str(int(value))] if value else ["--off"]), "--push", by=by)
+    return cli("set", pid, f"{field}={'' if value is None else value}", "--push", by=by)
+
+
+def sync_all():
+    """Every owner's Shipyard work onto the board, then one push. Deterministic; safe to run often."""
+    cli("pull")
+    lines = []
+    for slug in sorted(set(SLUG_BY_LOGIN.values())):
+        try:
+            lines.append(cli("sync", "--owner", slug).splitlines()[0])
+        except Exception as e:
+            lines.append(f"sync {slug}: failed {str(e)[:120]}")
+    lines.append(cli("push").splitlines()[0])
+    return "; ".join(lines)

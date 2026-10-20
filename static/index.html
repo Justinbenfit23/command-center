@@ -26,25 +26,27 @@ input.inl{background:transparent;border:0;border-bottom:1px dashed var(--line);c
 .note{color:var(--warn);font-size:12px}.muted{color:var(--muted)}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:12px}
 .card h3{margin:0 0 8px;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+.fresh{font-size:12px}.fresh.ok{color:var(--ok)}.fresh.old{color:var(--warn)}
+.aud{padding:1px 6px;border-radius:4px;font-size:10px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}.aud.bad{border-color:var(--warn);color:var(--warn)}
 .bw{padding:2px 10px;border-radius:10px;font-size:12px}.bw.available{background:#1f3b26;color:var(--ok)}.bw.normal{background:#2a2f3f}.bw.loaded{background:#3b1f2b;color:var(--bad)}
 .stats{display:flex;gap:22px;margin:6px 0 10px}.stats div b{display:block;font-size:22px;font-weight:600}.stats div small{color:var(--muted)}
 .spark{display:flex;gap:3px;align-items:flex-end;height:44px;margin:4px 0 2px}.spark i{flex:1;background:var(--accent);opacity:.75;border-radius:2px 2px 0 0;min-height:2px}.spark i.we{opacity:.25}
 .dows{display:flex;gap:3px}.dows span{flex:1;text-align:center;font-size:9px;color:var(--muted)}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase}
+table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;white-space:normal;overflow-wrap:anywhere;word-break:break-word}th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase}
 .prog{height:6px;background:#22242c;border-radius:3px;overflow:hidden;width:90px;display:inline-block;vertical-align:middle}.prog i{display:block;height:100%;background:var(--ok)}
 h2.fold{margin-top:8px;cursor:pointer;user-select:none}h2.fold:hover{color:var(--text)}h2.fold i{font-style:normal;display:inline-block;width:10px}
-.rock{border-left:3px solid var(--accent)}.rock .blurb{color:var(--muted);margin:-4px 0 8px}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;align-items:start;margin-top:12px}.col{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--rc,var(--accent));border-radius:8px;padding:12px;min-width:0}.col.empty{opacity:.6}.col h3{margin:0;font-size:15px;display:flex;gap:8px;align-items:baseline}.col h3 .n{margin-left:auto;font-size:12px;color:var(--muted);font-weight:400}.col .blurb{color:var(--muted);font-size:12px;margin:3px 0 10px}.pc{background:#0b0d13;border:1px solid var(--line);border-radius:7px;padding:9px 10px;margin-bottom:8px}.pc:hover{border-color:#3a3f50}.pc .top{display:flex;gap:6px;align-items:center;margin-bottom:5px}.ph{font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:9px;border:1px solid currentColor;white-space:nowrap}.ph.s0{color:var(--muted)}.ph.s1{color:var(--purple)}.ph.s2{color:var(--warn)}.ph.s3{color:var(--ok)}.who{margin-left:auto;font-size:11px;padding:1px 8px;border-radius:9px;background:#22263a;color:var(--text);white-space:nowrap}.pt{font-weight:600;font-size:13.5px;line-height:1.35;outline:none;border-radius:4px;padding:1px 2px;margin:0 -2px;cursor:text;overflow-wrap:anywhere}.pt:focus{background:#171a23;box-shadow:0 0 0 1px var(--line)}.pn{font-size:12.5px;color:#c4c8d4;margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:text;border-left:2px solid var(--line);padding-left:7px}.pn.add{color:var(--muted);font-size:12px;border:0;padding:0;display:none}.pc:hover .pn.add{display:block}.pc textarea{display:none;width:100%;min-height:64px;margin-top:6px;background:#171a23;color:inherit;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:12.5px;resize:vertical}.pc.ed textarea{display:block}.pc.ed .pn{display:none}.pa2{display:none;gap:6px;align-items:center;margin-top:7px;font-size:12px}.pc:hover .pa2,.pc.ed .pa2,.pc:focus-within .pa2{display:flex}.pa2 select{max-width:110px;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:5px;font-size:11px;padding:2px}.pa2 small{margin-left:auto}.pc[draggable=true]{cursor:grab}.pc.drag{opacity:.4}.col.over{outline:2px dashed var(--rc,var(--accent));outline-offset:2px;background:#1c2030}.nothing{border:1px dashed var(--line);border-radius:7px;padding:10px;color:var(--muted);font-size:12px;text-align:center}.roadsum{display:flex;gap:18px;flex-wrap:wrap;margin:4px 0 0;font-size:12px;color:var(--muted)}.roadsum b{color:var(--text);font-size:18px;margin-right:4px}
 .eng{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
 #dag{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto}
 .pr{display:flex;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;align-items:flex-start;width:100%}.pr .ti{flex:1;min-width:0}.pr .pa{display:flex;gap:4px;flex:none;margin-left:auto}.pr .pa button{white-space:nowrap}.mg{font-size:11px;padding:0 5px;border-radius:3px;border:1px solid var(--line)}.mg.BEHIND{color:var(--warn)}.mg.CLEAN{color:var(--ok)}.mg.BLOCKED{color:var(--muted)}.mg.DIRTY{color:var(--bad)}.pr:hover{background:#1e2230}.dot{width:8px;height:8px;border-radius:50%;background:#444;margin-top:6px;flex:none}.dot.green{background:var(--ok)}.dot.failing{background:var(--bad)}.dot.pending{background:var(--warn)}
-.two{display:grid;grid-template-columns:1fr 6px var(--prw,470px);gap:10px}.divider{cursor:col-resize;background:var(--line);border-radius:3px;margin:8px 0}.divider:hover,.divider.on{background:var(--accent)}.st.booting{background:var(--warn);animation:pulse 2.4s infinite}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 6px var(--prw,470px);gap:10px}.two>*{min-width:0}.tr,.md{overflow-wrap:anywhere}.md pre{white-space:pre-wrap}.divider{cursor:col-resize;background:var(--line);border-radius:3px;margin:8px 0}.divider:hover,.divider.on{background:var(--accent)}.st.booting{background:var(--warn);animation:pulse 2.4s infinite}
 
 .live .hd{padding:8px 12px}.st{width:9px;height:9px;border-radius:50%;background:#555;margin-top:6px;flex:none}.st.idle{background:var(--ok)}.st.shell{background:#666}.st.busy{background:var(--warn);animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}.tr{background:#0b0d13;border:1px solid var(--line);border-radius:6px;padding:10px;max-height:460px;overflow:auto;font-size:13px;white-space:pre-wrap}
 .tr .u{color:var(--accent);margin:8px 0 2px}.tr .a{margin-bottom:8px;border-bottom:1px dashed var(--line);padding-bottom:8px}.tr .tool{color:var(--muted);font-size:12px}
 .scr{font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:#c0c5d0;background:#000;border-radius:6px;padding:8px;white-space:pre;overflow:auto;max-height:300px;display:none}.row.showscr .scr{display:block}.row.showscr .tr{display:none}
 
-.md p{margin:0 0 8px}.md ul,.md ol{margin:0 0 8px 18px}.md code{background:#1e2230;padding:1px 4px;border-radius:3px;font-size:12px}.md pre{background:#000;padding:8px;border-radius:6px;overflow:auto;font-size:12px}.md h1,.md h2,.md h3{font-size:14px;margin:10px 0 4px;text-transform:none;letter-spacing:0;color:var(--text)}.md table{margin:6px 0}.md a{color:var(--accent)}
+.md p{margin:0 0 8px}.md ul,.md ol{margin:0 0 8px 18px}.md code{background:#1e2230;padding:1px 4px;border-radius:3px;font-size:12px}.md pre{background:#000;padding:8px;border-radius:6px;overflow:auto;font-size:12px}.md h1,.md h2,.md h3{font-size:14px;margin:10px 0 4px;text-transform:none;letter-spacing:0;color:var(--text)}.md table{margin:6px 0;width:100%;max-width:100%;table-layout:fixed;white-space:normal}.md thead,.md tbody,.md tr{white-space:normal}.md th,.md td{white-space:normal;overflow-wrap:anywhere;word-break:break-word}.md td code{white-space:normal;overflow-wrap:anywhere}.md a{color:var(--accent)}
 .slots{display:grid;grid-template-columns:90px 1fr auto;gap:6px 10px;align-items:center;margin:4px 0 10px;font-size:12px}.slots label{color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-size:10px}.slots input{background:#0b0d13;border:1px solid var(--line);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px}.slots a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .title-edit{background:transparent;border:0;border-bottom:1px dashed var(--line);color:var(--text);font:inherit;font-weight:500;width:100%;padding:0}
 .hd .ti b{cursor:text}
@@ -118,12 +120,12 @@ textarea.restored,input.restored{outline:2px solid var(--ok,#4ade80);outline-off
 <section id="intake">
   <div class="two"><div>
     <div class="newbox" id="newbox" ondragover="dragOn(event,'new')" ondragleave="dragOff(event,'new')" ondrop="dragOff(event,'new');dropImgs(event,'new')">
-      <input id="in" data-draft="intake.title" placeholder="Title — what this item is called">
-      <input id="inslack" data-draft="intake.slack" placeholder="Slack link (thread permalink) — optional">
-      <input id="ingran" data-draft="intake.granola" placeholder="Granola link (or paste the notes) — optional">
+      <input autocomplete="off" id="in" data-draft="intake.title" placeholder="Title — what this item is called">
+      <input autocomplete="off" id="inslack" data-draft="intake.slack" placeholder="Slack link (thread permalink) — optional">
+      <input autocomplete="off" id="ingran" data-draft="intake.granola" placeholder="Granola link (or paste the notes) — optional">
       <textarea id="innote" data-draft="intake.note" placeholder="First note (optional). Say what you already think this is and what you want done — it becomes the opening message of the session." rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')" ondrop="this.classList.remove('drop');dropImgs(event,'new')" onpaste="pasteImgs(event,'new')"></textarea>
       <div class="imgs" id="imnew"></div>
-      <div class="newrow"><div style="display:flex;gap:10px;align-items:center"><label class="pill"><input type="checkbox" id="instart" checked><span>Start a Claude Code session</span></label><select id="inlift" class="lift" title="lift"><option value="">lift?</option><option value="light">light</option><option value="medium">medium</option><option value="heavy">heavy</option></select><select id="inmodel" class="sel"><option value="fable">Fable 5.1</option><option value="opus">Opus 5</option><option value="sonnet">Sonnet 5</option><option value="cursor">Cursor (Opus 4.6)</option></select></div><button class="p" onclick="addItem()">New</button></div>
+      <div class="newrow"><div style="display:flex;gap:10px;align-items:center"><label class="pill"><input type="checkbox" id="instart" checked><span>Start a Claude Code session</span></label><select id="inlift" class="lift" title="lift"><option value="">lift?</option><option value="light">light</option><option value="medium">medium</option><option value="heavy">heavy</option></select><select id="inmodel" class="sel" title="each choice runs the newest model in that family; the label is the version sessions are actually answering with"><option value="fable">Fable</option><option value="opus">Opus</option><option value="sonnet">Sonnet</option></select></div><button class="p" onclick="addItem()">New</button></div>
     </div>
     <div class="muted" id="membar" title="live Claude sessions vs the cap (CC_MAX_LIVE), and what the Mac has left. Each session is ~1.9 GB: Claude itself plus the MCP servers it spawns."></div>
     <h2>Work items <span class="muted" id="citems"></span> <select id="sortby" class="sel" style="margin-left:10px" onchange="try{localStorage.setItem('cc.sort',this.value)}catch(e){};loadItems(true)"><option value="lift">lightest first</option><option value="added_desc">newest first</option><option value="added_asc">oldest first</option></select> <label class="muted" style="font-weight:400;margin-left:10px"><input type="checkbox" id="showtools" onchange="for(const id of openIds)loadChat(id)"> show tool calls</label></h2><div id="items"></div>
@@ -132,14 +134,14 @@ textarea.restored,input.restored{outline:2px solid var(--ok,#4ade80);outline-off
     <h2>My PRs <button class="s" onclick="loadMine(true)">↻</button></h2><div id="mine_prs" class="muted">loading…</div>
   </div></div>
 </section>
-<section id="team" style="display:none"><p class="muted">Commits per day from GitHub, tickets from Shipyard. Load = open tickets + this week's commits ÷ 5. <button class="s" onclick="loadTeam(true)">refresh GitHub</button></p><div id="teamcards">loading…</div></section>
+<section id="team" style="display:none"><p class="muted">One row per project on the EPD board: its PRD and every ticket under it. The bars are projects shipped per day. Update re-reads GitHub, Shipyard, LaunchDarkly and the board, and closes any project whose pull requests are all merged and have been quiet 7 days. <button class="s" id="teamupd" onclick="loadTeam(true)" title="re-read GitHub commits, every ticket's attached pull requests, LaunchDarkly flag modes, and the roadmap sync">Update</button> <span id="teamfresh"></span></p><div id="audit"></div><div id="teamcards">loading…</div></section>
 <section id="usage" style="display:none">
   <p class="muted">Your Claude plan limits, the same numbers as the Usage panel in the Claude app. Refreshes every 5 minutes. <button class="s" onclick="loadUsage(true)">refresh</button> <span class="muted" id="usage_at"></span></p>
   <div id="usagebars" class="ubars">loading…</div>
 </section>
 <section id="roadmap" style="display:none">
-  <p class="muted">Big rocks at the top; every open Shipyard ticket on the team or on you hangs off one. <button class="s" onclick="mapRoad()">map unmapped with Claude</button></p>
-  <div id="rocks"></div><h2>By engineer</h2><div class="eng" id="byeng"></div><h2>Graph</h2><div id="dag"></div>
+  <p class="muted">Each column is a big rock; each card is a PRD moving it, furthest along on top. Click a title or note to edit. <button class="s" id="roadupd" onclick="updateRoad()" title="re-read the EPD board and file any new PRD under a rock">Update</button> <span id="roadfresh"></span></p>
+  <div id="rocks"></div>
 </section>
 </main>
 <script>
@@ -168,7 +170,10 @@ function draftRestoreAll(root){(root||document).querySelectorAll('[data-draft]')
 const TEXTY=el=>el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&!/^(checkbox|radio|hidden|submit|button|range|file)$/i.test(el.type||'text'));
 function draftsPending(){for(const el of document.querySelectorAll('input,textarea')){if(!TEXTY(el))continue;if((el.value&&el.value.trim())||document.activeElement===el)return true}return false}
 document.addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.draft)draftSave(e.target)},true);
-new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes){if(n.nodeType!==1)continue;if(n.dataset&&n.dataset.draft)draftRestore(n);if(n.querySelectorAll)draftRestoreAll(n)}}).observe(document.documentElement,{childList:true,subtree:true});
+// Chrome's remembered-entries dropdown pops over the boxes on click; Justin pastes with Cmd-V and never wants it.
+const noAC=root=>{if(root.matches&&root.matches('input,textarea'))root.setAttribute('autocomplete','off');if(root.querySelectorAll)root.querySelectorAll('input:not([autocomplete]),textarea:not([autocomplete])').forEach(e=>e.setAttribute('autocomplete','off'))};
+document.addEventListener('DOMContentLoaded',()=>noAC(document));
+new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes){if(n.nodeType!==1)continue;noAC(n);if(n.dataset&&n.dataset.draft)draftRestore(n);if(n.querySelectorAll)draftRestoreAll(n)}}).observe(document.documentElement,{childList:true,subtree:true});
 // --- insert log: the last 60 paste/insert events, kept across reloads, so the next "my dictation vanished"
 // is attributable instead of a guess. Read it with ccDiag() in the console.
 function logIns(kind,el,n,flavors){try{const L=JSON.parse(localStorage.getItem('cc.inserts')||'[]');L.push({t:new Date().toTimeString().slice(0,8),kind,el:el?(el.id||el.tagName):'',n,flavors});localStorage.setItem('cc.inserts',JSON.stringify(L.slice(-60)))}catch(e){}}
@@ -179,6 +184,17 @@ window.ccDiag=()=>{const L=JSON.parse(localStorage.getItem('cc.inserts')||'[]');
 // focused and the text is simply gone. Catch that and put it in the box you were last in.
 let lastBox=null;
 document.addEventListener('focusin',e=>{if(e.target&&TEXTY(e.target))lastBox=e.target},true);
+// Measured 2026-10-15 08:03: three pastes into the Slack box arrived with an EMPTY clipboard (no types, no
+// text) while Chrome's own "paste from clipboard" chip showed the link, so Chrome inserted nothing. When a
+// paste carries no data at all, ask the clipboard directly (one-time Chrome permission on this page).
+function insertAt(a,t){a.focus();let ok=false;try{ok=document.execCommand('insertText',false,t)}catch(err){}
+ if(!ok){const i=a.selectionStart==null?a.value.length:a.selectionStart,j=a.selectionEnd==null?a.value.length:a.selectionEnd;
+  a.value=a.value.slice(0,i)+t+a.value.slice(j);try{a.setSelectionRange(i+t.length,i+t.length)}catch(err){}}
+ a.dispatchEvent(new Event('input',{bubbles:true}));return ok}
+document.addEventListener('paste',e=>{const a=document.activeElement,dt=e.clipboardData;
+ if(a&&TEXTY(a)&&!(dt&&dt.types&&dt.types.length)&&navigator.clipboard&&navigator.clipboard.readText){e.preventDefault();e.stopImmediatePropagation();
+  navigator.clipboard.readText().then(t=>{if(t){insertAt(a,t);logIns('readText',a,t.length,'empty paste event')}else logIns('readText-empty',a,0,'')})
+   .catch(err=>logIns('readText-denied',a,0,String(err).slice(0,60)))}},true);
 document.addEventListener('paste',e=>{const a=document.activeElement;
  // Measured 2026-10-12: a 2201-character dictation arrived on the clipboard, aimed at the right box, and
  // Chrome's own insert step then delivered nothing (insertFromPaste with no data) and the text was gone.
@@ -218,6 +234,11 @@ async function loadMem(){try{const m=await J('/api/mem');const el=document.getEl
 async function resumeAll(btn){const t=btn.textContent;btn.disabled=true;btn.textContent='resuming…';try{const r=await post('/api/sessions/resume',{});
  if(r.skipped&&r.skipped.length)alert(r.skipped.map(x=>x.title+': '+x.why).join('\n'));}finally{btn.disabled=false;btn.textContent=t}await loadItems(true);loadMem()}
 setInterval(()=>{if(!document.hidden)loadMem()},10000);setTimeout(loadMem,800);
+// Model picker: the alias always runs the newest model in its family; the label names the actual version
+// (read server-side from what sessions answered with), so an Opus 5.6 release shows up as "Opus 5.6".
+const FAM=['fable','opus','sonnet'];const famLabel=f=>((window._cfg||{}).models||{})[f]?.label||f[0].toUpperCase()+f.slice(1);
+function labelModels(){const s=document.getElementById('inmodel');if(s)for(const o of s.options)o.textContent=famLabel(o.value)}
+function modelOpts(t){const cur=t.model||'fable';return FAM.map(f=>`<option value="${f}" ${cur===f?'selected':''}>${esc(cur===f&&t.model_label&&t.model_label.toLowerCase().startsWith(f)?t.model_label:famLabel(f))}</option>`).join('')+(cur==='cursor'?'<option value="cursor" selected>Cursor</option>':'')}
 let openIds=new Set(),showArch=false;const liveOf={};
 const typing=()=>{const e=document.activeElement;return e&&(e.tagName==='TEXTAREA'||e.tagName==='INPUT')&&e.closest('.row')};
 const sortMode=()=>document.getElementById('sortby').value;
@@ -245,7 +266,7 @@ function head(t){const sh=t.shipyard_key?`<a href="${SY()}/t/${t.shipyard_key}" 
  const live=t.live?`<span class="muted">${t.live.status}</span>`:(t.live_sid?'<span class="muted" title="the process is gone but the conversation is saved; Resume picks it up where it stopped">stopped · resumable</span>':'<span class="muted">not started</span>');
  return `<div class="hd" data-sig='${sig(t).replace(/'/g,"&#39;")}' onclick="toggle('${t.id}',event)"><input type="checkbox" onclick="event.stopPropagation();done('${t.id}')" title="done → ends the Claude session and archives the item">${dot(t)}
  <div class="ti"><b id="ttl${t.id}" onclick="event.stopPropagation();editTitle('${t.id}')" title="click to rename">${esc(t.title)}</b><div class="m">${live} ${t.requester?esc(t.requester):''} ${sl} · ${sh} · ${prd} ${chips(t)} ${t.assignee?'<span class="tag team">→ '+esc(t.assignee.split('_')[0])+'</span>':''}${t.todos&&t.todos.length?` · <a href="#" target="_self" title="open the to-do list" onclick="event.stopPropagation();gotoTodo('${t.id}');return false">☑ ${t.todos.filter(x=>x.done).length}/${t.todos.length}</a>`:''}</div></div>
- <div class="acts" onclick="event.stopPropagation()">${t.live?`<button class="s" onclick="act('${t.id}','stop',this)" title="end the Claude session (frees ~1.5 GB); the item stays open and Resume brings it back">stop</button>`:`<button class="s" onclick="act('${t.id}','start',this)" title="${t.status!=='open'?'resumes the session and moves the item back to open':''}">${t.model==='cursor'?(t.live_sid||t.live?'Restart':'Start Cursor session'):t.live_sid?(t.status!=='open'?'Resume + reopen':'Resume session'):'Start Claude session'}</button>`}<button class="s" onclick="act('${t.id}','prd_live',this)">PRD</button><select class="lift ${t.lift||''}" title="lift — sorts lightest first" onchange="patch('/api/items/${t.id}',{lift:this.value}).then(()=>loadItems(true))"><option value="" ${!t.lift?'selected':''}>lift?</option><option value="light" ${t.lift==='light'?'selected':''}>light</option><option value="medium" ${t.lift==='medium'?'selected':''}>medium</option><option value="heavy" ${t.lift==='heavy'?'selected':''}>heavy</option></select><select class="sel" title="model for this session" onchange="post('/api/items/${t.id}/model',{model:this.value}).then(()=>loadItems(true))"><option value="fable" ${(t.model||'fable')==='fable'?'selected':''}>Fable 5.1</option><option value="opus" ${t.model==='opus'?'selected':''}>Opus 5</option><option value="sonnet" ${t.model==='sonnet'?'selected':''}>Sonnet 5</option><option value="cursor" ${t.model==='cursor'?'selected':''}>Cursor (Opus 4.6)</option></select><button class="s" onclick="act('${t.id}','team',this)" title="hand off and walk away: needs a PRD link on the card. Reads the chat to pick who (Kevin, David, Rami, Colton), reassigns the ticket, has the session set the owner in the EPD roadmap, runs dbr done, DMs them the PRD link with a bandwidth ask, ends the session, archives the card">→ team</button><button class="s tdbtn" onclick="gotoTodo('${t.id}')" title="swap this card between its chat and its to-do list">${todoLabel(t,todoView.has(t.id))}</button></div></div>`}
+ <div class="acts" onclick="event.stopPropagation()">${t.live?`<button class="s" onclick="act('${t.id}','stop',this)" title="end the Claude session (frees ~1.5 GB); the item stays open and Resume brings it back">stop</button>`:`<button class="s" onclick="act('${t.id}','start',this)" title="${t.status!=='open'?'resumes the session and moves the item back to open':''}">${t.model==='cursor'?(t.live_sid||t.live?'Restart':'Start Cursor session'):t.live_sid?(t.status!=='open'?'Resume + reopen':'Resume session'):'Start Claude session'}</button>`}<button class="s" onclick="act('${t.id}','prd_live',this)">PRD</button><select class="lift ${t.lift||''}" title="lift — sorts lightest first" onchange="patch('/api/items/${t.id}',{lift:this.value}).then(()=>loadItems(true))"><option value="" ${!t.lift?'selected':''}>lift?</option><option value="light" ${t.lift==='light'?'selected':''}>light</option><option value="medium" ${t.lift==='medium'?'selected':''}>medium</option><option value="heavy" ${t.lift==='heavy'?'selected':''}>heavy</option></select><select class="sel" title="model for this session" onchange="post('/api/items/${t.id}/model',{model:this.value}).then(()=>loadItems(true))">${modelOpts(t)}</select><button class="s" onclick="act('${t.id}','team',this)" title="hand off and walk away: needs a PRD link on the card. Reads the chat to pick who (Kevin, David, Rami, Colton), reassigns the ticket, has the session set the owner in the EPD roadmap, runs dbr done, DMs them the PRD link with a bandwidth ask, ends the session, archives the card">→ team</button><button class="s tdbtn" onclick="gotoTodo('${t.id}')" title="swap this card between its chat and its to-do list">${todoLabel(t,todoView.has(t.id))}</button>${t.live_sid?`<button class="s" onclick="copySid('${t.live_sid}',this)" title="copy this chat's Claude Code session id (${t.live_sid}) to paste into another chat">Copy Claude Code session ID</button>`:''}</div></div>`}
 function slot(id,key,label,href,ph,xf){const v=window._items[id][key]||'';const editing=window._edit&&window._edit[id+key];
  if(v&&!editing){return `<label>${label}</label><a href="${href(v)}" title="${esc(v)}" ${/^https?:/.test(v)?'target="_blank"':'onclick="return false"'}>${esc(key==='shipyard_key'?v:key==='prd_url'?(v.split('/d/')[1]?'Shipyard doc '+v.split('/d/')[1].slice(0,8):v):key==='granola'?(/^https?:/.test(v)?'Granola notes':v.slice(0,90)+(v.length>90?'…':'')):'thread')}</a><button class="s" onclick="editSlot('${id}','${key}')">edit</button>`}
  return `<label>${label}</label><input id="s_${key}${id}" value="${esc(v)}" placeholder="${ph}" onkeydown="if(event.key==='Enter')saveSlot('${id}','${key}')"><button class="s" onclick="saveSlot('${id}','${key}')">save</button>`}
@@ -369,8 +390,9 @@ async function handoff(id,btn,label){
 // AskUserQuestion, a permission prompt and the folder-trust dialog.
 function askBox(id,d){const q=d.question,opts=d.options||[];
  if(!q&&!d.dialog&&!opts.length)return '';
- const qt=q&&q.length?q.map(x=>x.q).filter(Boolean).join(' \u00b7 '):'';
- return `<div class="ask" id="ask${id}"><b>${q?'Claude is asking you':'Waiting on you'}</b>${qt?` <span class="muted">${esc(qt)}</span>`:''}`
+ // The question itself, in full, so the buttons make sense without scrolling the chat or opening a terminal.
+ const qt=(q&&q.length?q.map(x=>x.q).filter(Boolean).join('\n'):'')||d.prompt||'';
+ return `<div class="ask" id="ask${id}"><b>${q?'Claude is asking you':'The terminal is asking you'}</b>${qt?`<div class="q" style="white-space:pre-wrap;font-size:14px">${esc(qt)}</div>`:''}`
   +(d.tabs?`<div class="tabline">${esc(d.tabs)}</div>`:'')
   +(opts.length
     ?`<div class="opts" id="op${id}" tabindex="0" onkeydown="askKey(event,'${id}')">`
@@ -389,7 +411,7 @@ const termIds=new Set();
 function termOn(id){const box=document.getElementById('tm'+id);if(!box)return;
  if(termIds.has(id)){termIds.delete(id);box.style.display='none';return}
  termIds.add(id);box.style.display='block';termPoll(id);const pre=document.getElementById('scr'+id);if(pre)pre.focus({preventScroll:true})}
-async function termPoll(id){if(!termIds.has(id))return;let r;try{r=await J(`/api/items/${id}/screen`)}catch(e){return}
+async function termPoll(id){if(!termIds.has(id)||inflight.has('term'+id))return;inflight.add('term'+id);let r;try{r=await J(`/api/items/${id}/screen`)}catch(e){return}finally{inflight.delete('term'+id)}
  const pre=document.getElementById('scr'+id);if(pre)pre.textContent=r.screen||r.error||'(nothing on the pane)'}
 const TERMKEYS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',Enter:'enter',Escape:'escape',Tab:'tab',Backspace:'backspace',PageUp:'pageup',PageDown:'pagedown'};
 function termKey(e,id){const k=TERMKEYS[e.key];if(!k)return;e.preventDefault();termSend(id,k)}
@@ -397,6 +419,8 @@ async function termSend(id,k){const r=await post(`/api/items/${id}/keys`,{key:k}
  const pre=document.getElementById('scr'+id);if(pre&&r.screen!==undefined)pre.textContent=r.screen;askRefresh(id)}
 async function termType(id){const i=document.getElementById('ti'+id);const v=i&&i.value.trim();if(!v)return;i.value='';
  const r=await post(`/api/items/${id}/answer`,{text:v});if(r&&r.error){i.value=v;alert(r.error);return}askRefresh(id)}
+// Puts the session id on the clipboard so another chat can read this one's transcript or message it.
+async function copySid(sid,btn){const was=btn.textContent;try{await navigator.clipboard.writeText(sid);btn.textContent='copied'}catch(e){prompt('Copy the session id:',sid)}setTimeout(()=>{btn.textContent=was},1500)}
 const chatQ={};async function openTerm(id){const sid=liveOf[id];if(!sid){alert('no live session');return}await post(`/api/live/${sid}/focus`,{})}
 async function chat(id){if(chatQ[id]){alert('Claude is asking you a question. Answer it in the question box just above \u2014 a message sent now would be read as the answer.');return}const ta=document.getElementById('t'+id);const v=ta.value.trim();const L=pendingImgs[id]||[];if(L.some(x=>x.state==='up')){alert('still uploading — try again in a second');return}
  const imgs=L.filter(x=>x.state==='ok'&&x.path).map(x=>x.path);if(!v&&!imgs.length)return;lastSent[id]={text:v,at:Date.now()};ta.value='';draftClear(ta);pendingImgs[id]=[];renderImgs(id);const el=document.getElementById('c'+id);el.innerHTML+=`<div class="u">▸ ${esc(v)}${imgs.length?' <span class="muted">+'+imgs.length+' file'+(imgs.length>1?'s':'')+'</span>':''}</div><div class="working"><span class="st busy"></span> sending…</div>`;el.scrollTop=el.scrollHeight;const r=await post(`/api/items/${id}/send`,{text:v,images:imgs});if(r&&r.error){ta.value=v;draftSave(ta);const w=el.querySelector(':scope > .working');if(w)w.remove();alert(r.error)}el.dataset.fp='';setTimeout(()=>loadChat(id),1500);ta.focus()}
@@ -419,51 +443,93 @@ async function loadMine(refresh){const d=await J('/api/prs/mine?enrich=1'+(refre
  document.getElementById('mine_prs').innerHTML=groups.filter(([n,ps])=>ps.length).map(([n,ps])=>`<div class="prsec">${n} <span style="letter-spacing:0">· ${ps.length}</span></div>`+ps.map(row).join('')).join('')||'<div class="muted">none open</div>'}
 async function prMon(url,btn){btn.disabled=true;btn.textContent='starting…';const r=await post('/api/prs/monitor',{url,model:document.getElementById('inmodel').value});if(r.error)alert(r.error);if(r.item){openIds.add(r.item.id)}await loadItems(true);loadMine();if(r.item)setTimeout(()=>loadChat(r.item.id),2500)}
 async function prAct(url,action,btn){btn.disabled=true;btn.textContent='…';const r=await post('/api/prs/action',{url,action});if(!r.ok)alert(r.out||r.error);setTimeout(()=>loadMine(),1500)}
-async function loadTeam(refresh){const g=document.getElementById('teamcards');if(refresh)g.innerHTML='refreshing from GitHub (about 15s)…';const d=await J('/api/team'+(refresh?'?refresh=1':''));const max=Math.max(1,...d.flatMap(m=>m.series.map(s=>s.commits)));
- g.innerHTML=d.map(m=>`<div class="card"><h3>${esc(m.name)} <span class="bw ${m.bandwidth}">${m.bandwidth} · load ${m.load}</span></h3>
- <div class="stats"><div><b>${m.today}</b><small>commits today</small></div><div><b>${m.week}</b><small>this week</small></div><div><b>${m.avg_per_workday}</b><small>avg per workday, 14d</small></div><div><b>${m.active_tickets}</b><small>active tickets</small></div><div><b>${m.backlog_tickets}</b><small>in backlog</small></div><div><b>${m.tickets_from_me.length}</b><small>from me</small></div></div>
- <div class="spark">${m.series.map(s=>`<i class="${['Sat','Sun'].includes(s.dow)?'we':''}" style="height:${Math.max(4,100*s.commits/max)}%" title="${s.day}: ${s.commits}"></i>`).join('')}</div><div class="dows">${m.series.map(s=>`<span>${s.dow[0]}</span>`).join('')}</div>
- <div class="muted" style="font-size:12px;margin:6px 0 10px">${m.repos.map(r=>r[0]+' '+r[1]).join(' · ')}${m.fetched_at?' · fetched '+m.fetched_at.slice(5,16).replace('T',' '):''}</div>
- ${roadmapFor(m.login)}${tix('From me',m.tickets_from_me)}${tixOthers(m)}</div>`).join('');
+async function loadTeam(refresh){const g=document.getElementById('teamcards'),b=document.getElementById('teamupd');
+ if(refresh){g.innerHTML='reading GitHub, Shipyard pull requests, LaunchDarkly and the roadmap (about a minute)…';if(b){b.disabled=true;b.textContent='updating…'}}
+ const r=await J('/api/team'+(refresh?'?refresh=1':''));if(b){b.disabled=false;b.textContent='Update'}
+ if(!(epdMeta.phases||[]).length)await loadEpd();
+ const d=r.cards||r;renderAudit(r.audit||{},r.updating);const max=Math.max(1,...d.flatMap(m=>m.series.map(s=>s.shipped)));
+ g.innerHTML=d.map(m=>`<div class="card"><h3>${esc(m.name)} <span class="bw ${m.bandwidth}">${m.bandwidth} · ${m.active_projects} project${m.active_projects===1?'':'s'}</span></h3>
+ <div class="stats"><div><b>${m.shipped_week}</b><small>shipped this week</small></div><div><b>${m.shipped_14d}</b><small>shipped, 14d</small></div><div><b>${m.active_projects}</b><small>in flight</small></div><div><b>${m.projects_from_me.length}</b><small>from me</small></div></div>
+ <div class="spark">${m.series.map(s=>`<i class="${['Sat','Sun'].includes(s.dow)?'we':''}" style="height:${Math.max(4,100*s.shipped/max)}%" title="${s.day}: ${s.shipped} shipped"></i>`).join('')}</div><div class="dows">${m.series.map(s=>`<span>${s.dow[0]}</span>`).join('')}</div>
+ <div class="muted" style="font-size:12px;margin:6px 0 10px">projects shipped per day · ${m.repos.map(r=>r[0]+' '+r[1]).join(' · ')}${m.fetched_at?' · fetched '+m.fetched_at.slice(5,16).replace('T',' '):''}</div>
+ ${projSection('From me',m.projects_from_me,m)}${projOthers(m)}</div>`).join('');
  loadEpd()}
 // --- EPD Rolling Roadmap. The same rows the team edits on the Shipyard board (GTMP-1181). Opening this
 // tab runs roadmap.py sync for every owner; each edit here runs one roadmap.py op with --push.
-let epdRows={},epdMeta={phases:[],delivery:[],artifact:'#'};
-function epdSlug(login){return (login||'').split('-')[0]}
-async function loadEpd(refresh){const d=await J('/api/epd'+(refresh?'?refresh=1':''));epdMeta=d;epdRows={};
- (d.projects||[]).forEach(r=>{(epdRows[r.assignee]=epdRows[r.assignee]||[]).push(r)});
- document.querySelectorAll('[data-epd]').forEach(el=>{el.innerHTML=epdTable(epdRows[el.dataset.epd]||[])})}
-function roadmapFor(login){const s=epdSlug(login);return `<h2 style="margin-top:8px">Roadmap <a class="muted" style="font-size:11px;font-weight:400" target="_blank" href="${epdMeta.board||epdMeta.artifact||'#'}">Shipyard board</a></h2><div data-epd="${s}">${epdTable(epdRows[s]||[])}</div>`}
+let epdMeta={phases:[],delivery:[],artifact:'#'};
+async function loadEpd(refresh){const d=await J('/api/epd'+(refresh?'?refresh=1':''));epdMeta=d}
 function epdSel(k,f,val,opts){return `<select class="sel" onchange="epdSet('${k}','${f}',this.value)">${['',...opts].map(o=>`<option value="${o}" ${o===(val||'')?'selected':''}>${o||'—'}</option>`).join('')}</select>`}
-function epdTable(rs){if(!rs.length)return'<div class="muted" style="font-size:12px">no roadmap rows</div>';
+// One row = one project on the EPD board: its PRD and every ticket under it. Nothing on this tab is
+// per-ticket any more. The state column is what the last Update read off the code, not a typed phase.
+function projTable(rs){if(!rs.length)return'<div class="muted" style="font-size:12px">no projects</div>';
  return `<table><thead><tr><th>#</th><th>Project</th><th>Phase</th><th>Delivery</th><th>Progress</th><th>Team</th></tr></thead><tbody>${
- rs.map(r=>`<tr><td><input class="epdrank" value="${r.rank||''}" title="top-three rank" onchange="epdSet('${r.task_key}','rank',this.value)"></td>
- <td><a target="_blank" href="${r.link||'#'}" title="${r.link_kind==='prd'?'PRD':'no PRD yet — opens the ticket'}">${esc(r.title||'')}</a> ${r.ticket?`<a class="muted" style="font-size:11px" target="_blank" href="${SY()}/t/${r.ticket}">${r.ticket}</a>`:''}</td>
- <td>${epdSel(r.task_key,'phase',r.phase,epdMeta.phases||[])}</td>
- <td>${epdSel(r.task_key,'delivery',r.delivery,epdMeta.delivery||[])}</td>
+ rs.map(r=>`<tr><td><input class="epdrank" value="${r.rank||''}" title="top-three rank" onchange="epdSet('${r.id}','rank',this.value)"></td>
+ <td><a target="_blank" href="${r.link||'#'}" title="${r.link_kind==='prd'?'PRD':'no PRD yet — opens the ticket'}">${esc(r.title||'')}</a>${projState(r)}
+  ${(r.flags||[]).map(fl=>` <a class="tag" target="_blank" href="${fl.url}" title="LaunchDarkly flag">${esc(fl.key)} · ${esc(fl.mode)}</a>`).join('')}</td>
+ <td>${epdSel(r.id,'phase',r.phase,epdMeta.phases||[])}</td>
+ <td>${epdSel(r.id,'delivery',r.delivery,epdMeta.delivery||[])}</td>
  <td><span class="prog"><i style="width:${r.progress||0}%"></i></span></td>
- <td><input type="checkbox" ${r.team_view?'checked':''} title="show on the team view" onchange="epdSet('${r.task_key}','team_view',this.checked)"></td></tr>`).join('')}</tbody></table>`}
+ <td><input type="checkbox" ${r.team_view?'checked':''} title="show on the team view" onchange="epdSet('${r.id}','team_view',this.checked)"></td></tr>`).join('')}</tbody></table>`}
+// Only the two states worth a mark: code stalled behind a flag, or a branch nobody merged.
+function projState(r){if(r.state==='held by flag')return ` <span class="aud bad" title="${esc(r.why||'')}">held by flag</span>`;
+ if(r.state==='abandoned')return ` <span class="aud bad" title="every pull request was closed without merging">abandoned</span>`;
+ return ''}
+function projSection(label,rs,m){if(!rs.length)return'';
+ return `<h2 style="margin-top:8px">${label} · ${rs.length} <a class="muted" style="font-size:11px;font-weight:400" target="_blank" href="${epdMeta.board||epdMeta.artifact||'#'}">Shipyard board</a></h2>`+projTable(rs)}
 async function epdSet(key,field,val){if(field==='rank')val=val===''?null:parseInt(val,10)||null;
- await patch('/api/epd/'+key,{[field]:val});loadEpd()}
-function tixTable(ts){return `<table><thead><tr><th>Ticket</th><th>Status</th><th>Size</th><th>Progress</th></tr></thead><tbody>${ts.map(t=>`<tr><td><a target="_blank" href="${t.url||'#'}" title="${t.prd_url?'PRD':'no PRD yet — opens the ticket'}">${esc(t.title)}</a> <a class="muted" style="font-size:11px" target="_blank" href="${t.ticket_url||t.url||'#'}">${t.key}</a></td><td>${esc(t.status)}</td><td>${t.complexity||''}</td><td><span class="prog"><i style="width:${t.progress||0}%"></i></span></td></tr>`).join('')}</tbody></table>`}
-function tix(label,ts){if(!ts.length)return'';return `<h2 style="margin-top:8px">${label} · ${ts.length}</h2>`+tixTable(ts)}
+ await patch('/api/epd/'+key,{[field]:val});loadTeam()}
+// The freshness line, and what the last Update closed on its own. There is no review list: a project
+// whose pull requests are all merged and have been quiet a week is closed without being asked about.
+function renderAudit(a,updating){const f=document.getElementById('teamfresh'),p=document.getElementById('audit');
+ if(!a.at){f.textContent=updating?'updating…':'never updated — press Update';p.innerHTML='';return}
+ const age=Math.round((Date.now()-new Date(a.at).getTime())/60000);
+ f.innerHTML=`<span class="fresh ${age<120?'ok':'old'}">fresh as of ${esc(a.at.slice(5,16).replace('T',' '))}${age>=120?` · ${age<1440?age+' min':Math.round(age/1440)+'d'} old`:''}</span>`
+  +` · ${a.projects_checked||0} projects checked · LaunchDarkly: ${esc(a.ld||'?')}`;
+ const cl=a.closed||[],nl=a.flags_not_live||[];
+ p.innerHTML=(cl.length?`<div class="card"><h3>Closed on this run · ${cl.length}</h3>
+ <table><thead><tr><th style="width:140px">Project</th><th>What shipped</th><th style="width:150px">Who · shipped</th></tr></thead><tbody>${cl.map(x=>`<tr>
+  <td>${esc(x.id||'')}</td>
+  <td><b>${esc(x.title||'')}</b>${x.error?`<br><span class="muted">${esc(x.error)}</span>`:''}${(x.tickets||[]).length?`<br><span class="muted">tickets closed: ${x.tickets.map(k=>`<a target="_blank" href="${SY()}/t/${k}">${esc(k)}</a>`).join(', ')}</span>`:''}${(x.ticket_errors||[]).length?`<br><span class="aud bad">${x.ticket_errors.map(e=>esc(e)).join('; ')}</span>`:''}</td>
+  <td>${esc(x.assignee||'')} · ${esc(x.shipped_at||'')}</td></tr>`).join('')}</tbody></table></div>`:'')
+  +(nl.length?`<div class="muted" style="font-size:12px;margin:6px 0 12px">GTM Products flags not fully on: ${nl.map(fl=>`<a class="tag" target="_blank" href="${fl.url}">${esc(fl.key)} · ${esc(fl.mode)}</a>`).join(' ')}</div>`:'')}
 // Work they picked up themselves is collapsed by default so a card reads as "what I handed this person".
 let teamOpen=new Set();try{teamOpen=new Set(JSON.parse(localStorage.getItem('cc.teamopen')||'[]'))}catch(e){}
-function tixOthers(m){const ts=m.tickets_from_others;if(!ts.length)return'';const open=teamOpen.has(m.login);
- return `<h2 class="fold" onclick="toggleTix('${m.login}',this)"><i>${open?'\u25be':'\u25b8'}</i> From others · ${ts.length}</h2><div id="oth_${m.login}" style="display:${open?'':'none'}">${tixTable(ts)}</div>`}
+function projOthers(m){const rs=m.projects_from_others;if(!rs.length)return'';const open=teamOpen.has(m.login);
+ return `<h2 class="fold" onclick="toggleTix('${m.login}',this)"><i>${open?'\u25be':'\u25b8'}</i> From others · ${rs.length}</h2><div id="oth_${m.login}" style="display:${open?'':'none'}">${projTable(rs)}</div>`}
 function toggleTix(login,el){const b=document.getElementById('oth_'+login),open=b.style.display==='none';
  b.style.display=open?'':'none';el.querySelector('i').textContent=open?'\u25be':'\u25b8';
  open?teamOpen.add(login):teamOpen.delete(login);try{localStorage.setItem('cc.teamopen',JSON.stringify([...teamOpen]))}catch(e){}}
-async function loadRoad(){const d=await J('/api/roadmap');
- document.getElementById('rocks').innerHTML=d.rocks.filter(r=>r.id!=='none'||r.tasks.length).map(r=>`<div class="card rock"><h3>${esc(r.title)} <span class="muted" style="font-size:12px">${r.tasks.length} tickets</span></h3><div class="blurb">${esc(r.blurb)}</div>
- <table><thead><tr><th style="width:150px">Ticket</th><th>Why it moves this rock</th><th style="width:130px">Who · status</th></tr></thead><tbody>${r.tasks.map(t=>`<tr><td><a target="_blank" href="${t.url}">${t.key}</a></td><td><b>${esc(t.title)}</b><br><span class="muted">${esc(t.rationale)||'<i>unmapped — click “map unmapped with Claude”</i>'}</span></td><td>${esc(t.engineer.split(' ')[0])} · ${esc(t.status)}<br><select onchange="remap('${t.key}',this.value)" style="background:#0b0d13;color:#e6e8ef;border:1px solid #262a36;border-radius:4px;font-size:11px">${d.rocks.map(x=>`<option value="${x.id}" ${x.id===r.id?'selected':''}>${esc(x.title.slice(0,28))}</option>`).join('')}</select></td></tr>`).join('')||'<tr><td colspan=3 class="muted">nothing mapped here yet</td></tr>'}</tbody></table></div>`).join('');
- document.getElementById('byeng').innerHTML=Object.entries(d.by_engineer).map(([n,ts])=>`<div class="card"><h3>${esc(n)} <span class="muted" style="font-size:12px">${ts.length}</span></h3>${ts.map(t=>`<div class="pr" onclick="window.open('${t.url}')"><div class="ti"><b>${t.key}</b> <span class="tag">${esc(t.rock_id)}</span><br><small class="muted">${esc(t.title)}</small></div></div>`).join('')}</div>`).join('');
- const el=document.getElementById('dag');try{const {svg}=await mermaid.render('dagsvg',d.mermaid);el.innerHTML=svg}catch(e){el.innerHTML='<pre class="muted">'+esc(d.mermaid)+'</pre>'}}
-async function remap(key,rock){await patch('/api/roadmap/map/'+key,{rock_id:rock,rationale:''});loadRoad()}
-async function mapRoad(){document.getElementById('rocks').innerHTML='<div class="muted">asking Claude to map unmapped tickets (up to a minute)…</div>';await post('/api/roadmap/map');loadRoad()}
+let _road=null,_roadPoll=null;const _prdT={};
+const PHASES=['','Discovery & Definition','Evaluation','Development'],ROCKC=['#7aa2f7','#bb9af7','#9ece6a','#e0af68','#7dcfff'];
+const phRank=p=>{const i=PHASES.indexOf(p||'');return i<0?1:i};
+async function loadRoad(){const d=_road=await J('/api/roadmap');const b=document.getElementById('roadupd');
+ b.disabled=d.running;b.textContent=d.running?'updating…':'Update';
+ document.getElementById('roadfresh').innerHTML=(d.running?esc(d.step||'working')+' · ':'')+(d.updated_at?'updated '+esc(d.updated_at.replace('T',' ').slice(0,16)):'')+(d.unfiled?` · ${d.unfiled} not filed yet, press Update`:'')+(d.error?` · <span style="color:var(--bad)">${esc(d.error)}</span>`:'');
+ const busy=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#rocks');
+ if(busy&&!d.running)return;                                     // never redraw under a caret
+ const opts=cur=>d.rocks.map(x=>`<option value="${x.id}" ${x.id===cur?'selected':''}>${esc(x.id==='none'?'no big rock':x.title)}</option>`).join('')+'<option value="_hide">remove (not in flight)</option>';
+ const card=(p,rid)=>`<div class="pc" id="pc_${p.doc_id}" draggable="true" data-rock="${rid}" onmousedown="this.draggable=!event.target.closest('.pt,textarea,select,button,a')" ondragstart="event.dataTransfer.setData('text/plain','${p.doc_id}');this.classList.add('drag')" ondragend="this.classList.remove('drag');this.draggable=true"><div class="top"><span class="ph s${phRank(p.phase)}">${esc(p.phase||'idea')}</span><span class="who">${esc(p.who||'?')}</span></div>
+  <div class="pt" contenteditable="plaintext-only" spellcheck="false" title="your title; the PRD's own is: ${esc(p.source_title)}" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}" onblur="if(this.textContent.trim()!==this.dataset.v){this.dataset.v=this.textContent.trim();prdSet('${p.doc_id}',{title:this.dataset.v})}" data-v="${esc(p.title)}">${esc(p.title)}</div>
+  ${p.notes?`<div class="pn" onclick="prdEdit('${p.doc_id}')" title="click to edit">${esc(p.notes)}</div>`:`<div class="pn add" onclick="prdEdit('${p.doc_id}')">+ add a note</div>`}
+  <textarea placeholder="where it stands, what's next…" oninput="prdNote('${p.doc_id}',this)" onblur="prdDone('${p.doc_id}',this)">${esc(p.notes)}</textarea>
+  <div class="pa2"><a target="_blank" href="${esc(p.url)}">open PRD</a><button class="s" onclick="prdClaude('${p.doc_id}',this)" title="start an intake session that reads the PRD and its tickets and adds a dated status line here">Claude notes</button><select title="move to another big rock" onchange="prdRock('${p.doc_id}',this.value)">${opts(rid)}</select><small class="muted" id="ps_${p.doc_id}">${p.notes_at?'saved '+esc(p.notes_at.slice(5,16).replace('T',' ')):''}</small></div></div>`;
+ const col=(r,i)=>{const ps=[...r.prds].sort((x,y)=>phRank(y.phase)-phRank(x.phase));return `<div class="col${ps.length?'':' empty'}" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="if(!this.contains(event.relatedTarget))this.classList.remove('over')" ondrop="prdDrop(event,this,'${r.id}')" style="--rc:${r.id==='none'?'#565b6e':ROCKC[i%ROCKC.length]}"><h3>${esc(r.title)}<span class="n">${ps.length}</span></h3>${r.blurb?`<div class="blurb">${esc(r.blurb)}</div>`:'<div class="blurb">PRDs not yet filed under a big rock</div>'}${ps.map(p=>card(p,r.id)).join('')||'<div class="nothing">nothing in flight</div>'}</div>`};
+ const all=d.rocks.flatMap(r=>r.prds),n=k=>all.filter(p=>phRank(p.phase)===k).length;
+ const main=d.rocks.filter(r=>r.id!=='none').sort((x,y)=>(!x.prds.length)-(!y.prds.length)),none=d.rocks.find(r=>r.id==='none');
+ document.getElementById('rocks').innerHTML=`<div class="roadsum"><span><b>${all.length}</b>PRDs in flight</span><span><b style="color:var(--ok)">${n(3)}</b>in development</span><span><b style="color:var(--warn)">${n(2)}</b>in evaluation</span><span><b style="color:var(--purple)">${n(1)}</b>in discovery</span><span><b>${n(0)}</b>ideas, no phase yet</span></div>`
+  +`<div class="board">${main.map(col).join('')}${none?col(none,main.length):''}</div>`;
+ clearTimeout(_roadPoll);if(d.running)_roadPoll=setTimeout(loadRoad,4000)}
+function prdDrop(e,col,rid){e.preventDefault();col.classList.remove('over');const id=e.dataTransfer.getData('text/plain'),c=document.getElementById('pc_'+id);if(!id||!c||c.dataset.rock===rid)return;col.querySelector('.nothing')?.remove();col.appendChild(c);c.dataset.rock=rid;prdRock(id,rid)}
+function prdEdit(id){const c=document.getElementById('pc_'+id);c.classList.add('ed');const t=c.querySelector('textarea');t.focus();t.setSelectionRange(t.value.length,t.value.length)}
+function prdDone(id,el){const c=document.getElementById('pc_'+id);c.classList.remove('ed');const pn=c.querySelector('.pn');const v=el.value.trim();pn.textContent=v||'+ add a note';pn.classList.toggle('add',!v)}
+async function prdSet(id,f){const r=await patch('/api/roadmap/prd/'+id,f);const el=document.getElementById('ps_'+id);if(el)el.textContent=r&&r.updated_at?'saved '+r.updated_at.slice(5,16).replace('T',' '):'NOT saved';return r}
+function prdNote(id,el){const s=document.getElementById('ps_'+id);if(s)s.textContent='saving…';clearTimeout(_prdT[id]);_prdT[id]=setTimeout(()=>prdSet(id,{notes:el.value}),600)}
+async function prdRock(id,v){await prdSet(id,v==='_hide'?{hidden:1}:{rock_id:v});document.activeElement.blur();loadRoad()}
+async function prdClaude(id,b){b.disabled=true;b.textContent='starting…';const r=await post('/api/roadmap/prd/'+id+'/claude',{});b.textContent=r&&r.id?'started in Intake':'failed';if(r&&r.id)openIds.add(r.id)}
+async function updateRoad(){await post('/api/roadmap/update');loadRoad()}
 try{const sv=localStorage.getItem('cc.sort');if(sv)document.getElementById('sortby').value=sv}catch(e){}
 try{const sv=localStorage.getItem('cc.sort');if(sv)document.getElementById('sortby').value=sv}catch(e){}
-J('/api/config').then(c=>{window._cfg=c;window._roster=c.roster;loadItems(true)});
+J('/api/config').then(c=>{window._cfg=c;labelModels();window._roster=c.roster;loadItems(true)});
 loadItems(true);loadMine();setInterval(()=>{if(!document.hidden)loadItems(false)},30000);
 setInterval(()=>{if(document.hidden)return;chatTick++;for(const id of openIds){if(chatStatus[id]==='busy'||chatTick%4===0)loadChat(id)}},2500);
 setInterval(()=>{if(document.hidden)return;for(const id of termIds)termPoll(id)},1000);
