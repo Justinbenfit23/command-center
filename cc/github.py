@@ -23,7 +23,7 @@ def my_open_prs():
 
 def enrich_pr(url):
     try:
-        q = ["gh", "pr", "view", url, "--json", "reviewDecision,statusCheckRollup,mergeStateStatus,autoMergeRequest"]
+        q = ["gh", "pr", "view", url, "--json", "reviewDecision,statusCheckRollup,mergeStateStatus,autoMergeRequest,state,isDraft,title"]
         d = json.loads(subprocess.run(q, capture_output=True, text=True, timeout=30).stdout)
         if d.get("mergeStateStatus") == "UNKNOWN":   # GitHub computes mergeability lazily; the first read often says UNKNOWN
             time.sleep(1.2); d = json.loads(subprocess.run(q, capture_output=True, text=True, timeout=30).stdout)
@@ -31,9 +31,10 @@ def enrich_pr(url):
         bad = [s for s in states if s and s not in ("SUCCESS", "SKIPPED", "NEUTRAL", "PENDING", "IN_PROGRESS", "QUEUED")]
         pend = [s for s in states if s in ("PENDING", "IN_PROGRESS", "QUEUED", None)]
         ci = "failing" if bad else "pending" if pend else "green"
-        return {"review": d.get("reviewDecision") or "", "ci": ci, "merge": d.get("mergeStateStatus"), "auto": bool(d.get("autoMergeRequest"))}
+        return {"review": d.get("reviewDecision") or "", "ci": ci, "merge": d.get("mergeStateStatus"), "auto": bool(d.get("autoMergeRequest")),
+                "state": d.get("state") or "", "draft": bool(d.get("isDraft")), "title": d.get("title") or ""}
     except Exception:
-        return {"review": "", "ci": "unknown"}
+        return {"review": "", "ci": "unknown", "state": "", "draft": False, "title": ""}
 
 def commits_by_day(login, days=14):
     since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")

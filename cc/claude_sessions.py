@@ -11,12 +11,15 @@ DOC = re.compile(rf"https://{re.escape(SHIPYARD_HOST)}/d/[0-9a-f-]{{36}}")
 PR  = re.compile(rf"https://github\.com/{re.escape(GH_ORG)}/[\w.-]+/pull/\d+")
 RADAR = re.compile(rf"https://{re.escape(RADAR_HOST)}/[\w/?=&.-]+")
 SLACKL = re.compile(rf"https://{re.escape(SLACK_HOST)}/archives/[A-Z0-9]+/p\d{{16}}(?:\?thread_ts=[\d.]+)?")
+GRANOLA = re.compile(r"https://notes\.granola\.ai/[\w/?=&.-]+")
 
 def pin_links(item, text):
     """Anything a session produces that has a home on the row gets pinned there. First key/doc wins;
     PRs, Radar links and Slack links accumulate (deduped) in the item's `links` JSON."""
     upd = {}
-    m = KEY.search(text)
+    # A "Ticket: KEY" line is the session naming its own ticket (the seed asks for exactly that); it beats any
+    # key merely mentioned earlier in the chat, which is how a test instruction once became a card's key.
+    m = next((KEY.search(l) for l in text.splitlines() if l.strip().lower().startswith("ticket:") and KEY.search(l)), None) or KEY.search(text)
     if m and not item.get("shipyard_key"): upd["shipyard_key"] = m.group(0)
     # The PRD slot: a Shipyard doc URL on a line that says PRD wins outright (that is how the PRD button asks
     # the session to answer); otherwise the first doc URL seen fills an empty slot.
@@ -27,9 +30,14 @@ def pin_links(item, text):
         if d and not item.get("prd_url"): upd["prd_url"] = d.group(0)
     links = json.loads(item.get("links") or "[]") if isinstance(item.get("links"), str) else (item.get("links") or [])
     have = {l["url"] for l in links}
-    for kind, rx in (("pr", PR), ("radar", RADAR), ("slack", SLACKL)):
+    # Every ticket, Shipyard document, Slack thread and Granola page the session mentions is kept too, so the
+    # card's slot dropdowns can list "the other ones" with a description instead of making you click.
+    for kind, rx in (("pr", PR), ("radar", RADAR), ("slack", SLACKL), ("doc", DOC), ("granola", GRANOLA)):
         for u in rx.findall(text):
             if u not in have: links.append({"kind": kind, "url": u}); have.add(u)
+    for k in KEY.findall(text):
+        u = f"https://{SHIPYARD_HOST}/t/{k}"
+        if u not in have: links.append({"kind": "ticket", "url": u, "key": k}); have.add(u)
     if len(links) != len(json.loads(item.get("links") or "[]") if isinstance(item.get("links"), str) else (item.get("links") or [])): upd["links"] = json.dumps(links)
     if upd: db.update_item(item["id"], **upd)
     return upd

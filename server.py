@@ -4,7 +4,7 @@ big-rocks roadmap. Stdlib only. Run: python3 server.py -> http://127.0.0.1:8765 
 import json, os, sys, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
-from cc import models, db, slack, triage, github, sessions, shipyard, roadmap, live, usage, epd, audit, claude_sessions as cs
+from cc import models, db, slack, triage, github, sessions, shipyard, roadmap, live, usage, epd, audit, checkpoints, prchips, linkinfo, prsync, claude_sessions as cs
 from cc.config import ME, ME_UID, TEAM, TEAM_ID, TEAM_NAME, GH_ORG, SHIPYARD_HOST, ACCEL_DIR, HANDOFF_TEMPLATE, EPD_ARTIFACT_URL
 
 def _intake_pg(item, meta):
@@ -42,6 +42,7 @@ def items_with_live(status="open", sort="lift"):
             cbs = cb.get_status(it["id"])
             it["live"] = {"status": cbs["status"], "pane": None, "kind": "cursor"}
         it["model_label"] = models.label(models.of_session(it.get("live_sid")))
+        it["prs"] = prchips.chips_for(it)
         if x and x.get("title") and it.get("source_type") == "live" and it["title"] in (x.get("name"), "Claude session"): 
             db.update_item(it["id"], title=x["title"]); it["title"] = x["title"]
     return items
@@ -51,6 +52,7 @@ def items_with_live_one(iid):
     it["live"] = {"status": x["status"], "pane": x["pane"], "kind": x["kind"]} if x else None
     it["todos"] = db.todos(iid)
     it["model_label"] = models.label(models.of_session(it.get("live_sid")))   # what this session actually ran last
+    it["prs"] = prchips.chips_for(it)
     return it
 
 # Aliases, not pinned versions: the CLI resolves "opus"/"sonnet"/"fable" to the newest
@@ -420,6 +422,23 @@ def create_item(body):
         except Exception as e: db.update_item(iid, rationale=(item["rationale"] + f" | start failed: {e}")[:500])
     return items_with_live_one(iid)
 
+def run_checkpoint(body):
+    """The strip's "run" button. The open card carrying the event's ticket key gets `run the <KEY> checkpoint`
+    typed into its session (the chat-send path, so a pending question still blocks it); with no open card, a
+    new session starts with that line as its whole seed. `dry` reports which of the two would happen."""
+    key = (body.get("key") or "").upper().strip(); url = body.get("url") or ""
+    if not key: return {"error": "the event title does not start with a ticket key"}
+    line = f"run the {key} checkpoint"
+    it = next((x for x in db.list_items("open", "added_desc") if (x.get("shipyard_key") or "").upper() == key), None)
+    if body.get("dry"): return {"would": "send" if it else "start", "item": {"id": it["id"], "title": it["title"]} if it else None, "line": line}
+    if it:
+        r = action(it["id"], "send", {"text": line})
+        if r.get("error"): return r
+        checkpoints.mark_ran(url); return {"ok": True, "sent": it["id"], "line": line}
+    r = create_item({"text": (body.get("title") or f"{key} checkpoint")[:300], "start": True, "seed": line, "model": body.get("model")})
+    db.update_item(r["id"], shipyard_key=key)   # so the next run finds this card instead of starting another
+    checkpoints.mark_ran(url); return {"ok": True, "started": r["id"], "line": line}
+
 def action(iid, kind, body):
     it = db.get_item(iid)
     if not it: return {"error": "no such item"}
@@ -447,6 +466,8 @@ def action(iid, kind, body):
         live.send(lv["pane"], text); return {"ok": True}
     if kind == "upload":
         return {"path": save_upload(iid, body.get("name"), body.get("data"))}
+    if kind == "sync_prs":
+        return prsync.sync(it)
     if kind in ("answer", "keys"):
         # Drive the terminal modal from the chat. The pane is the only truth about what is on screen, so
         # everything here reads it back before and after it touches anything.
@@ -701,7 +722,7 @@ class H(BaseHTTPRequestHandler):
                     opts = live.options(pane) if (pane and (q or dlg)) else []
                     return self._send(200, {"messages": msgs, "status": lv["status"] if lv else "gone", "last_tool": live.last_tool(it["live_sid"]) if lv and lv["status"] == "busy" else None,
                                             "question": q, "dialog": dlg, "prompt": live.dialog_prompt(pane) if opts else None,
-                                            "options": opts, "tabs": live.tabs(pane) if opts else None})
+                                            "options": opts, "tabs": live.tabs(pane) if opts else None, "prs": prchips.chips_for(db.get_item(it["id"]) or it)})
                 return self._send(200, {"messages": [{"role": m["role"], "text": m["content"]} for m in db.messages(seg[2])], "status": None})
             if len(seg) == 4 and seg[:2] == ["api", "items"] and seg[3] == "screen":
                 it = db.get_item(seg[2]) or {}
@@ -710,13 +731,20 @@ class H(BaseHTTPRequestHandler):
                 if not pane: return self._send(200, {"screen": "", "error": "no live session"})
                 return self._send(200, {"screen": live.visible(pane), "options": live.options(pane), "status": lv.get("status")})
             if len(seg) == 4 and seg[:2] == ["api", "items"] and seg[3] == "todos": return self._send(200, db.todos(seg[2]))
+            if len(seg) == 4 and seg[:2] == ["api", "items"] and seg[3] == "links":
+                # the slot dropdown opening: describe anything still blank, right now, so the list is never bare
+                it = db.get_item(seg[2])
+                if not it: return self._send(404, {"error": "no such item"})
+                return self._send(200, linkinfo.fill(it, limit=10) if "describe" in qs else it.get("links") or [])
             if path == "/api/todos/push":
                 it = db.item_by_key_or_sid(key=(qs.get("key") or [None])[0], sid=(qs.get("sid") or [None])[0])
                 return self._send(200, {"item": it["id"], "todos": db.todos(it["id"])}) if it else self._send(404, {"error": "no item with that key or session"})
+            if path == "/api/checkpoints":
+                return self._send(200, checkpoints.get(refresh="refresh" in qs, day=(qs.get("date") or [None])[0]))
             if path == "/api/prs/mine":
                 prs = github.my_open_prs() if "refresh" in qs else (db.prs_by_author(ME) or github.my_open_prs())
                 if "enrich" in qs:
-                    for pr in prs: pr.update(github.enrich_pr(pr["url"]))
+                    for pr in prs: pr.update(prchips.refresh(pr["url"]) if "fresh" in qs else prchips.view(pr["url"]))   # fresh = opening the list; else the chip cache
                 return self._send(200, prs)
             if path == "/api/team": return self._send(200, team_view(refresh="refresh" in qs))
             if path == "/api/team/audit": return self._send(200, update_everything() if "run" in qs else {"running": _AUDIT["running"], **audit.last()})
@@ -784,6 +812,7 @@ class H(BaseHTTPRequestHandler):
                         "append adds a dated entry under my existing notes; never send \"notes\", that would replace them."
                         + (f"\nMy notes so far:\n{p_['notes']}" if p_["notes"] else ""))
                 return self._send(201, create_item({"text": f"Roadmap notes: {p_['title'][:80]}", "note": note, "start": True, "model": body.get("model") or "opus"}))
+            if path == "/api/checkpoints/run": return self._send(200, run_checkpoint(body))
             if path == "/api/prs/monitor":
                 url = body.get("url", ""); m = __import__("re").match(rf"https://github\.com/{GH_ORG}/([\w.-]+)/pull/(\d+)", url)
                 if not m: return self._send(400, {"error": f"not a {GH_ORG} PR url"})
@@ -861,6 +890,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("CC_PORT", "8765"))
     db.conn().close(); db.migrate_v1()
     threading.Thread(target=_watcher, daemon=True).start()
+    prchips.start(); linkinfo.start()
     print(f"command-center on http://127.0.0.1:{port}", flush=True)
     ThreadingHTTPServer.allow_reuse_address = True
     ThreadingHTTPServer(("127.0.0.1", port), H).serve_forever()
