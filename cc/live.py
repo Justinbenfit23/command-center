@@ -108,6 +108,10 @@ def pending_question(sid):
     for l in _tail(p, 300):
         try: d = json.loads(l)
         except Exception: continue
+        # Only the real turns. Newer Claude Code also writes `api-request-blob` records that echo earlier
+        # assistant messages (tool_use included) without their tool_result, so an answered question would
+        # read as open forever and the card would refuse to send (GTMP-1376).
+        if d.get("type") not in ("user", "assistant"): continue
         c = (d.get("message") or {}).get("content")
         if not isinstance(c, list): continue
         for b in c:
