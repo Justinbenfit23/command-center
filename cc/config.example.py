@@ -67,3 +67,26 @@ TEAM_NAME = "Your Team"
 EPD_BOARD_URL = "https://tickets.example.com/docs/your-board-doc-id/render"
 EPD_ARTIFACT_URL = EPD_BOARD_URL
 ROADMAP_CLI = os.path.expanduser("~/work/agent-system/playbooks/epd-rolling-roadmap/roadmap.py")
+
+# --- Make it yours. Everything below is the part of the app that was specific to the author's setup: the ticket
+# prefix the UI pins, the exact text the PRD / Done / Monitor buttons type into a Claude pane and the first message
+# a new session gets, the calendar command behind the checkpoint strip, and the LaunchDarkly tag the Team audit reads.
+# Put your own skill names in the command strings, or leave them as plain English and let Claude work it out.
+TICKET_PREFIX = "PROJ"                 # keys look like PREFIX-123; the UI pins any PREFIX-\d+ it sees in a session
+TICKET_SYSTEM_NAME = "ticket"          # how the prompts refer to your ticket system ("Shipyard", "Jira", "Linear"...)
+TIMEZONE = "America/Denver"
+# Command that prints today's checkpoint calendar events, one per line: "<KEY> <title> <google-calendar-url>".
+# None disables the checkpoint strip.
+CHECKPOINTS_CMD = None
+LD_PROJECT = "default"; LD_ENV = "production"; LD_TAG = "your-team-tag"   # Team audit flag check; token from LD_API_KEY or ~/.ld_env; skipped without one
+# What the buttons type into the session. {title}, {key}, {key_note}, {url}, {prefix}, {team_name}, {team_id} are filled in.
+PRD_COMMAND = "Write a short spec for: {title}{key_note}. Save it where specs live and reply with the link or path on its own line."
+DONE_COMMAND = "Wrap this up: say what was done, what is left, and where the artifacts are."
+PR_MONITOR_COMMAND = ("Monitor this PR: {url}. Check CI status, review threads and mergeability, fix what you can, "
+                      "and tell me when it is ready to merge or needs me.")
+# The instruction at the end of a new session's first message, when the item has no ticket yet / already has one.
+SEED_ASK_NEW = ("Give me a three-sentence read: what this is, what it would take, and what you would do first. "
+                "Then go do the work the note asks for. Stop and ask only if the work is destructive, outward-facing, "
+                "or the note is genuinely ambiguous about what I want.")
+SEED_ASK_TICKET = ("This is {key}. Read it, then give me a three-sentence read on where it stands and the next step, "
+                   "then go do that next step. Stop and ask only if the work is destructive, outward-facing, or genuinely ambiguous.")

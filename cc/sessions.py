@@ -1,7 +1,7 @@
 """Claude Code sessions from ~/.claude/history.jsonl, with liveness from tmux pane titles + activity.md."""
 import json, os, re, subprocess, glob
 from datetime import datetime
-from .config import CLAUDE_HISTORY, WEEKLY_PLANS
+from .config import CLAUDE_HISTORY, WEEKLY_PLANS, CLAUDE_CWD
 
 def _tmux_titles():
     try:
@@ -61,6 +61,6 @@ def list_sessions(limit=40):
     return sorted(out, key=lambda x: x["last_active"], reverse=True)
 
 def open_in_terminal(sid, project):
-    cmd = f'cd "{project or os.path.expanduser("~/work")}" && claude --resume {sid}'
+    cmd = f'cd "{project or CLAUDE_CWD}" && claude --resume {sid}'
     script = f'tell application "Terminal" to do script "{cmd}"\ntell application "Terminal" to activate'
     subprocess.Popen(["osascript", "-e", script]); return cmd

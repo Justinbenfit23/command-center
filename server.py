@@ -5,7 +5,8 @@ import json, os, sys, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from cc import models, db, slack, triage, github, sessions, shipyard, roadmap, live, usage, epd, audit, checkpoints, prchips, linkinfo, prsync, claude_sessions as cs
-from cc.config import ME, ME_UID, TEAM, TEAM_ID, TEAM_NAME, GH_ORG, SHIPYARD_HOST, ACCEL_DIR, HANDOFF_TEMPLATE, EPD_ARTIFACT_URL
+from cc.config import (ME, ME_UID, TEAM, TEAM_ID, TEAM_NAME, GH_ORG, SHIPYARD_HOST, ACCEL_DIR, HANDOFF_TEMPLATE, EPD_ARTIFACT_URL,
+                       CLAUDE_CWD, TICKET_PREFIX, TICKET_SYSTEM_NAME, PRD_COMMAND, DONE_COMMAND, PR_MONITOR_COMMAND, SEED_ASK_NEW, SEED_ASK_TICKET)
 
 def _intake_pg(item, meta):
     try:
@@ -100,14 +101,8 @@ def seed_for_live(item):
         "granola": granola or None, "message_text": (item.get("body") or "")[:1500] or None,
         "slack_context": _sc(item),
     }.items() if v}
-    ask = (f"First, create a Shipyard task on team {TEAM_NAME} (team_id {TEAM_ID}) titled from the ask, "
-           "description carrying the requester, link, note, context and what is actually being asked; reply with its key on its own line as "
-           "`Ticket: GTMP-NNN`. Then give me a three-sentence read: what this is, what it would take, and whether it is mine or the team's. "
-           "Then go do the work the note asks for. Do not wait for me to approve it: the note is the go-ahead. "
-           "Stop and ask only if the work is destructive, outward-facing, or the note is genuinely ambiguous about what I want." if not item.get("shipyard_key") else
-           f"This is Shipyard {item['shipyard_key']}. Read it, then give me a three-sentence read on where it stands and the next step, "
-           "then go do that next step. Do not wait for me to approve it: the ticket is the go-ahead. "
-           "Stop and ask only if the work is destructive, outward-facing, or genuinely ambiguous.")
+    ask = (SEED_ASK_NEW.format(team_name=TEAM_NAME, team_id=TEAM_ID, prefix=TICKET_PREFIX) if not item.get("shipyard_key")
+           else SEED_ASK_TICKET.format(key=item["shipyard_key"], team_name=TEAM_NAME, team_id=TEAM_ID, prefix=TICKET_PREFIX))
     files = attach_block(item.get("attachments"))
     return (TODO_HOWTO + (files + "\n\n" if files else "") + "Intake item from my command center. Everything I have is in this JSON; treat `first_look_note` as my instructions and context, "
             "`granola` as meeting notes: if it is a notes.granola.ai link, OPEN IT FIRST with the Chrome browser tools (tabs_context_mcp, navigate, then get_page_text; the page renders client-side and needs my logged-in Chrome) and treat the page text as the notes; if it is pasted text, it already is the notes. "
@@ -117,8 +112,8 @@ def seed_for_live(item):
 
 TODO_HOWTO = ("This item has a to-do list in my command center. It is MINE: do NOT push checklists, plans or steps to it on your own. "
               "Add a line ONLY when I explicitly ask (\"add that to my to-do\", \"put it on the list\"), and then only the lines I asked for, with:\n"
-              "curl -s -X POST http://127.0.0.1:8765/api/todos/push -H 'Content-Type: application/json' "
-              "-d '{\"key\": \"<GTMP key>\", \"items\": [\"the one line I asked for\"]}'\n"
+              f"curl -s -X POST http://127.0.0.1:{os.environ.get('CC_PORT', '8765')}/api/todos/push -H 'Content-Type: application/json' "
+              "-d '{\"key\": \"<" + TICKET_PREFIX + " key>\", \"items\": [\"the one line I asked for\"]}'\n"
               "(use \"sid\": \"<your session id>\" before a ticket exists). GET /api/todos/push?key=<key> reads it; PATCH /api/todos/<id> {\"done\": true} "
               "marks a line done when I ask you to.\n\n")
 
@@ -240,7 +235,7 @@ class _HandoffFields(dict):
         return ""
 
 def _handoff_notify(iid, assignee):
-    """Move the ticket to the assignee and Slack them the handoff. Runs after dbr done so the ticket key
+    """Move the ticket to the assignee and Slack them the handoff. Runs after the done command so the ticket key
     the session produced is on the card. A failed DM becomes a to-do on the card instead of vanishing,
     and nothing in here may raise: the caller still has a session to end after us."""
     try:
@@ -291,7 +286,7 @@ def _handoff_notify_inner(iid, assignee):
     else: print(f"handoff DM sent to {name} for item {iid}", file=sys.stderr, flush=True)
     return err
 
-_HANDOFFS = set()   # items whose handoff is mid-flight: the reaper leaves their session alone until dbr done finishes
+_HANDOFFS = set()   # items whose handoff is mid-flight: the reaper leaves their session alone until the done command finishes
 
 def _reap_archived():
     """An archived card must not keep a Claude session alive. Each one is ~2 GB, and the card is out of the working
@@ -303,7 +298,7 @@ def _reap_archived():
             _end_session(it["id"], "archived reaper")
 
 def _claim_after_dbr(iid, assignee, wait=420):
-    """dbr done often creates or closes the ticket. Once the session goes idle, pin whatever key it
+    """The done command often creates or closes the ticket. Once the session goes idle, pin whatever key it
     produced onto the item, hand the ticket over open rather than done, and END the session — the card
     is already archived, so leaving Claude running just holds memory."""
     _HANDOFFS.add(iid)
@@ -321,7 +316,7 @@ def _claim_after_dbr_inner(iid, assignee, wait):
         msgs = live.transcript(it["live_sid"], limit=30) if it.get("live_sid") else []
         text = "\n".join(m["text"] for m in msgs if m["role"] == "assistant")
         if msgs: cs.pin_links(it, text)
-        # dbr done closes the ticket for the work just finished and spins off a follow-up for what is
+        # The done command closes the ticket for the work just finished and spins off a follow-up for what is
         # left. The spin-off is created last, so the highest key in the transcript is the one to hand over.
         keys = sorted(set(cs.KEY.findall(text)), key=lambda k: int(k.split("-")[1]))
         key = keys[-1] if keys else (db.get_item(iid) or {}).get("shipyard_key")
@@ -329,7 +324,7 @@ def _claim_after_dbr_inner(iid, assignee, wait):
         try: _handoff_notify(iid, assignee)
         finally: _end_session(iid, "handoff")
         return
-    # dbr done never went idle inside the window. The card is handed off and archived either way, so
+    # The done command never went idle inside the window. The card is handed off and archived either way, so
     # notify anyway and reclaim the memory rather than leaving an orphan running all day.
     try: _handoff_notify(iid, assignee)
     finally: _end_session(iid, "handoff timeout")
@@ -488,8 +483,7 @@ def action(iid, kind, body):
         time.sleep(0.25); return {"ok": True, "key": k, "screen": live.visible(pane), "options": live.options(pane)}
     if kind == "prd_live":
         lv = ensure_live(it)
-        live.send(lv["pane"], "/prd-authoring " + it["title"] + (f" (Shipyard {it['shipyard_key']})" if it.get("shipyard_key") else "")
-                  + ". Publish to Shipyard and reply with the document URL on its own line.")
+        live.send(lv["pane"], cs.prd_text(it))
         return {"ok": True}
     if kind == "model":
         m = MODELS.get(body.get("model") or "", body.get("model")); db.update_item(iid, model=body.get("model"))
@@ -511,14 +505,14 @@ def action(iid, kind, body):
         return {"ok": True}
     if kind == "dbr_done":
         lv = _live_index().get(it.get("live_sid") or "")
-        if lv: live.send(lv["pane"], "run dbr done")
+        if lv: live.send(lv["pane"], DONE_COMMAND)
         return {"ok": bool(lv)}
     if kind == "ask": return {"reply": cs.ask(it), "item": db.get_item(iid)}
     if kind == "prd": return {"reply": cs.prd(it), "item": db.get_item(iid)}
     if kind == "chat": return {"reply": cs.send(it, body.get("text", "")), "item": db.get_item(iid)}
     if kind == "team":
-        # One click, then walk away: pick the assignee from the chat, run dbr done in the session, Slack the
-        # handoff (after dbr done, so the ticket key is on the card), end the session, archive the card.
+        # One click, then walk away: pick the assignee from the chat, run the done command in the session, Slack the
+        # handoff (after the done command, so the ticket key is on the card), end the session, archive the card.
         assignee = body.get("assignee") or it.get("assignee")
         if assignee not in TEAM or assignee == ME:
             assignee = pick_assignee(it)
@@ -533,8 +527,8 @@ def action(iid, kind, body):
         db.update_item(iid, owner="team", assignee=assignee)
         lv = _live_index().get(it.get("live_sid") or "")
         if lv:
-            live.send(lv["pane"], f"Handed this to {name}. Run dbr done to close it out.")
-            time.sleep(1.0); live.send(lv["pane"], "run dbr done")
+            live.send(lv["pane"], f"Handed this to {name}. Close it out.")
+            time.sleep(1.0); live.send(lv["pane"], DONE_COMMAND)
             threading.Thread(target=_claim_after_dbr, args=(iid, assignee), daemon=True).start()
         else:
             threading.Thread(target=_handoff_notify, args=(iid, assignee), daemon=True).start()
@@ -817,15 +811,14 @@ class H(BaseHTTPRequestHandler):
                 url = body.get("url", ""); m = __import__("re").match(rf"https://github\.com/{GH_ORG}/([\w.-]+)/pull/(\d+)", url)
                 if not m: return self._send(400, {"error": f"not a {GH_ORG} PR url"})
                 repo, num = m.group(1), m.group(2)
-                # Always start in ~/work: the MCP servers and workspace CLAUDE.md are registered
+                # Always start in CLAUDE_CWD: the MCP servers and workspace CLAUDE.md are registered
                 # at that project scope, and a session started inside the repo never loads them.
-                cwd = os.path.expanduser("~/work")
-                checkout = os.path.expanduser(f"~/work/{repo}")
+                cwd = CLAUDE_CWD
+                checkout = os.path.join(CLAUDE_CWD, repo)
                 iid = db.insert_item(title=f"Monitor {repo} #{num}", owner="me", source_type="pr", route="me", cwd=cwd, model=body.get("model"))
                 db.update_item(iid, links=json.dumps([{"kind": "pr", "url": url}]))
                 seed = body.get("seed") or ((f"cd {checkout} first — the checkout is there.\n" if os.path.isdir(checkout) else "")
-                                            + f"/github-pr-monitor {url}\nMonitor this PR: read the PR's Slack thread first (humans post blocking asks there that GitHub never shows), then CI status, bot review threads, mergeability. "
-                                            "Fix and reply to review threads per the skill, and tell me when it is ready to merge or needs me.")
+                                            + PR_MONITOR_COMMAND.format(url=url, title="", key="", key_note="", prefix=TICKET_PREFIX))
                 try: lv = ensure_live(db.get_item(iid), seed)
                 except Exception as e: return self._send(500, {"error": str(e)[:300], "item": db.get_item(iid)})
                 return self._send(201, {"item": items_with_live_one(iid), "live": lv})

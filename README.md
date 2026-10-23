@@ -23,17 +23,45 @@ session transcript and types into the real tmux pane.
 
 ## Requirements
 
-macOS, Python 3.11+ (stdlib only), `tmux`, the `gh` CLI (authenticated), and Claude Code.
-Optional: a Slack user token in the keychain, and an MCP ticket server on your PATH.
+macOS only (tmux, the keychain, and AppleScript are used directly). Python 3.11+ with the standard
+library, `tmux`, the `gh` CLI (authenticated), and Claude Code. Everything else is optional and
+degrades to an empty tab or a one-line error when it is missing.
 
 ## Setup
 
 ```bash
-cp cc/config.example.py cc/config.py   # fill in your roster, org, hosts
+git clone https://github.com/Justinbenfit23/command-center.git
+cd command-center
+cp cc/config.example.py cc/config.py   # fill in your login, roster, hosts; or let Claude do it
 python3 server.py                      # http://127.0.0.1:8765
 ```
 
-`cc/config.py` is gitignored: it holds your team roster, user ids and internal hostnames.
+Fastest path: run `claude` inside the folder and ask it to read `README.md` and
+`cc/config.example.py`, then write `cc/config.py` for you. `cc/config.py` is gitignored: it holds
+your team roster, user ids, internal hostnames and the prompts below.
+
+## Make it yours
+
+The app is a wrapper around Claude Code sessions. Everything that was specific to the author's
+workflow is a value in `cc/config.py`, so swapping in your own skills is editing strings, not code:
+
+| Config key | What it drives | Default in the example |
+|---|---|---|
+| `TICKET_PREFIX`, `TICKET_SYSTEM_NAME` | which keys get pinned onto cards (`PREFIX-123`), how prompts name your tracker | `PROJ`, `ticket` |
+| `SEED_ASK_NEW`, `SEED_ASK_TICKET` | the instruction a new session gets with the intake JSON | plain English, no tracker required |
+| `PRD_COMMAND`, `DONE_COMMAND`, `PR_MONITOR_COMMAND` | what the PRD, Done and Monitor buttons type into the pane; put your own `/skill` names here | plain English |
+| `CLAUDE_CWD` | the folder new sessions start in (where your MCP servers and CLAUDE.md are registered) | `~/work` |
+| `CHECKPOINTS_CMD` | a command printing today's "checkpoint" calendar events, one per line | `None` (strip off) |
+| `TEAM`, `TEAM_ID`, `ME_UID`, `HANDOFF_TEMPLATE` | the Team tab and the one-click handoff | placeholders |
+| `SHIPYARD_HOST`, `RADAR_HOST`, `SLACK_HOST`, `GH_ORG` | hosts the app builds links for and matches against | example hosts |
+| `LD_TAG`, `LD_PROJECT`, `LD_ENV` | the feature-flag check in the Team audit; skipped without a token | placeholder |
+| `ROCKS` | the Roadmap tab's big rocks | two placeholders |
+
+Optional integrations, each one off until its dependency exists: a ticket MCP server named
+`shipyard-mcp-stdio` on your PATH (tickets, PRD links, Team tab, handoff); a Slack user token
+reachable through the scripts folder in `SLACK_SCRIPTS` (Slack intake and DMs); a LaunchDarkly read
+token in `LD_API_KEY` or `~/.ld_env` (flag audit); a roadmap CLI at `ROADMAP_CLI` (the EPD board).
+The usage card reads your Claude Code login from the macOS keychain and works for anyone.
 
 ## Layout
 

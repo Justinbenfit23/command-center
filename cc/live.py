@@ -1,5 +1,6 @@
 """Live interactive Claude Code sessions, from ~/.claude/sessions/<pid>.json (pid, sessionId, tmux pane, status, cwd).
 Read = the session's transcript jsonl. Write = `tmux send-keys` into its pane, so text lands in the real conversation."""
+from .config import CLAUDE_CWD
 import glob, json, os, subprocess, time, re
 from . import db
 
@@ -258,7 +259,7 @@ def ensure_host(cwd=None):
     """The tmux server the sessions live in. Started detached, so it belongs to no Terminal window: closing or
     killing Terminal.app leaves it (and every Claude inside it) running. Returns the host session name."""
     if server_up(): return _host_session() or HOST_NAME
-    subprocess.run(["tmux", "new-session", "-d", "-s", HOST_NAME, "-c", cwd or os.path.expanduser("~/work")], check=True, timeout=10)
+    subprocess.run(["tmux", "new-session", "-d", "-s", HOST_NAME, "-c", cwd or CLAUDE_CWD], check=True, timeout=10)
     return HOST_NAME
 
 def transcript_cwd(sid):
@@ -401,7 +402,7 @@ def spawn(cwd=None, timeout=60, model=None, resume=None):
     """Open a new tmux window running `claude` (or `claude --resume <sid>`); wait for it to register.
     Returns (sid or None, pane). A None sid means it is still booting (slow SessionStart hooks); the caller
     keeps the pane and finishes later. Creates the tmux server if none is running."""
-    host = ensure_host(cwd); cwd = cwd or os.path.expanduser("~/work")
+    host = ensure_host(cwd); cwd = cwd or CLAUDE_CWD
     cmd = "claude" + (f" --resume {resume}" if resume else "") + (f" --model {model}" if model else "")
     args = ["new-window", "-d", "-P", "-F", "#{pane_id}", "-c", cwd, cmd]
     if host: args[1:1] = ["-t", host]

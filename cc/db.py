@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS roadmap (
   remote_at TEXT,              -- updated_at of the artifact row we last reconciled against
   deleted INTEGER NOT NULL DEFAULT 0
 );
--- Roadmap tab, PRD grain (GTMP-1288). Justin's own fields per in-flight PRD: his title, his notes, which big
+-- Roadmap tab, PRD grain. The owner's own fields per in-flight PRD: title, notes, which big
 -- rock it sits under. Keyed by the Shipyard doc id, so the same PRD reached from the board or a card is one row.
 CREATE TABLE IF NOT EXISTS prd_rows (
   doc_id TEXT PRIMARY KEY, title TEXT, notes TEXT DEFAULT '', rock_id TEXT, manual INTEGER NOT NULL DEFAULT 0,

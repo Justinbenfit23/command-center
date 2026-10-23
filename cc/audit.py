@@ -10,7 +10,7 @@ If yes the project is finished, full stop -- no list to review. The work is: mar
 Done, mark its Shipyard tickets done, and record the day the last pull request merged, which is the
 day the project actually shipped. That ship date is what the per-person chart counts.
 
-LaunchDarkly is the one veto. Merged is not shipped: GTMP-1153's four pull requests are all merged
+LaunchDarkly is the one veto. Merged is not shipped: a project's four pull requests can all be merged
 while opp-gen-auto-territory-assignment-mode still serves dry_run in production. A flag is tied to
 a project when the flag's name, description or tags carry one of its ticket keys, or when the flag
 key appears in the body of one of its pull requests (how opp-generation #2374 names the flag it
@@ -23,14 +23,11 @@ import json, os, re, subprocess, urllib.request, urllib.error
 from datetime import datetime, timedelta, timezone
 
 from . import db, epd, github, shipyard
-from .config import TEAM, ME_UID
+from .config import TEAM, ME_UID, TICKET_PREFIX, LD_PROJECT, LD_ENV, LD_TAG
 
 LD_HOST = "https://app.launchdarkly.com"
-LD_PROJECT = "default"
-LD_ENV = "production"
-LD_TAG = "team-gtm-products"
 QUIET_DAYS = 7                  # merged and then this quiet = nobody is still working on it
-KEY_RE = re.compile(r"GTMP-(\d+)", re.I)
+KEY_RE = re.compile(rf"{re.escape(TICKET_PREFIX)}-(\d+)", re.I)
 SLUG_RE = re.compile(r"[a-z0-9]+(?:[-.][a-z0-9]+){2,}")
 ACTIVE_TICKET = ("todo", "in_progress", "in_review")
 
@@ -88,7 +85,7 @@ def ld_flags():
         out.append({"key": f.get("key"), "name": f.get("name") or f.get("key"), "mode": _mode(value, how),
                     "serving": "" if value is None else str(value), "how": how,
                     "url": f"{LD_HOST}/{LD_PROJECT}/{LD_ENV}/features/{f.get('key')}",
-                    "tickets": sorted({"GTMP-" + n for n in KEY_RE.findall(text)})})
+                    "tickets": sorted({f"{TICKET_PREFIX}-" + n for n in KEY_RE.findall(text)})})
     return out, "ok"
 
 # ---------------------------------------------------------------- pull requests
@@ -126,7 +123,7 @@ def _age_days(iso):
 
 def assess(proj, cache, flags):
     """What the code says about one roadmap project, independent of the phase a human last typed."""
-    keys = proj.get("tickets") or ([proj["id"]] if re.match(r"^GTMP-\d+$", proj.get("id") or "") else [])
+    keys = proj.get("tickets") or ([proj["id"]] if re.match(rf"^{re.escape(TICKET_PREFIX)}-\d+$", proj.get("id") or "") else [])
     prs, tickets, named = [], [], set()
     for k in keys:
         t = shipyard.call("get_task", task_id=k)

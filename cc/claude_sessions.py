@@ -1,12 +1,13 @@
 """One nested Claude Code session per intake item, driven with `claude -p`.
 First turn creates the session (--session-id), later turns --resume it. The same id works in a terminal
-(`claude --resume <id>`), so nothing is trapped in this UI. Replies are scanned for a GTMP key and it is
+(`claude --resume <id>`), so nothing is trapped in this UI. Replies are scanned for a ticket key (TICKET_PREFIX) and it is
 written back onto the item, which is how a ticket "auto-populates"."""
 import json, re, subprocess, uuid
-from .config import CLAUDE_CWD, CLAUDE_ALLOWED_TOOLS, GH_ORG, SHIPYARD_HOST, RADAR_HOST, SLACK_HOST, TEAM_ID, TEAM_NAME
+from .config import (CLAUDE_CWD, CLAUDE_ALLOWED_TOOLS, GH_ORG, SHIPYARD_HOST, RADAR_HOST, SLACK_HOST, TEAM_ID, TEAM_NAME,
+                     TICKET_PREFIX, TICKET_SYSTEM_NAME, PRD_COMMAND, DONE_COMMAND)
 from . import db
 
-KEY = re.compile(r"\bGTMP-\d{2,5}\b")
+KEY = re.compile(rf"\b{re.escape(TICKET_PREFIX)}-\d{{1,6}}\b")
 DOC = re.compile(rf"https://{re.escape(SHIPYARD_HOST)}/d/[0-9a-f-]{{36}}")
 PR  = re.compile(rf"https://github\.com/{re.escape(GH_ORG)}/[\w.-]+/pull/\d+")
 RADAR = re.compile(rf"https://{re.escape(RADAR_HOST)}/[\w/?=&.-]+")
@@ -73,10 +74,14 @@ def send(item, text):
     return reply
 
 def ask(item):     return send(item, seed_prompt(item) if not item.get("claude_session_id") else "Give me your read on this one: what is it, what would it take, mine or the team's?")
+def prd_text(item):
+    """The PRD button's text, from PRD_COMMAND in config."""
+    key = item.get("shipyard_key") or ""
+    return PRD_COMMAND.format(title=item["title"], key=key, key_note=(f" ({TICKET_SYSTEM_NAME} {key})" if key else ""),
+                              url="", prefix=TICKET_PREFIX, team_name=TEAM_NAME, team_id=TEAM_ID)
 def prd(item):
-    p = ("/prd-authoring " + item["title"] + (f" (Shipyard {item['shipyard_key']})" if item.get("shipyard_key") else "")
-         + ". Publish to Shipyard and reply with the document URL on its own line.")
+    p = prd_text(item)
     return send(item, (seed_prompt(item) + "\n\nThen: " + p) if not item.get("claude_session_id") else p)
 def dbr_done(item):
-    return send(item, "run dbr done") if item.get("claude_session_id") else None
+    return send(item, DONE_COMMAND) if item.get("claude_session_id") else None
 

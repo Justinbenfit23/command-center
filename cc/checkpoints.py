@@ -1,12 +1,12 @@
-"""Daily checkpoint strip. Calendar events on Justin's Google Calendar whose title contains "checkpoint"
-(written by the rollout-checkpoint-reminder skill as "<KEY> checkpoint: ...") are read once a morning, and on
-demand, through ~/work/bin/gcal_event.py --list. Nothing here writes to the calendar."""
+"""Daily checkpoint strip. Calendar events whose title contains "checkpoint" ("<KEY> checkpoint: ...") are read
+once a morning, and on demand, through CHECKPOINTS_CMD from config (any command that prints one event per line as
+"<KEY> <title> <url>"). CHECKPOINTS_CMD = None disables the strip. Nothing here writes to the calendar."""
 import os, re, subprocess, threading, time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-TZ = ZoneInfo("America/Denver")
-PY = os.path.expanduser("~/work/bin/python"); SCRIPT = os.path.expanduser("~/work/bin/gcal_event.py")
+from .config import CHECKPOINTS_CMD, TIMEZONE
+TZ = ZoneInfo(TIMEZONE)
 LINE = re.compile(r"^(\S+)\s+(.*?)\s+(https://www\.google\.com/calendar/\S+)\s*$")
 KEY = re.compile(r"^([A-Z][A-Z0-9]+-\d+)\b")
 _lock = threading.Lock()
@@ -18,8 +18,9 @@ def today(): return datetime.now(TZ).date().isoformat()
 def fetch(day):
     """Events on `day` with "checkpoint" in the title. --list prints the neighbouring days too (its window is
     UTC), so each line is re-checked against the Denver date."""
-    r = subprocess.run([PY, SCRIPT, "--list", day], capture_output=True, text=True, timeout=60)
-    if r.returncode != 0: raise RuntimeError((r.stderr or r.stdout).strip()[-300:] or "gcal_event.py failed")
+    if not CHECKPOINTS_CMD: raise RuntimeError("checkpoint strip is off: set CHECKPOINTS_CMD in cc/config.py")
+    r = subprocess.run([*CHECKPOINTS_CMD, day], capture_output=True, text=True, timeout=60)
+    if r.returncode != 0: raise RuntimeError((r.stderr or r.stdout).strip()[-300:] or "checkpoint command failed")
     out = []
     for line in r.stdout.splitlines():
         m = LINE.match(line.strip())
